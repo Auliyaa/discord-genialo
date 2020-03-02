@@ -1,2 +1,6 @@
+# nodejs-related files
 node_modules
 package-lock.json
+
+# bot configuration (not for push)
+genialo.conf

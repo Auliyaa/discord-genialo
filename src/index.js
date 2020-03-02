@@ -1,4 +1,11 @@
 const discord = require('discord.js');
+const cfg_parser = require('configparser')
+
+// ====================================
+// parse configuration
+// ====================================
+const config = new cfg_parser();
+config.read(process.argv[2]);
 
 // ====================================
 // create the main discord client handle
@@ -11,16 +18,16 @@ const client = new discord.Client();
 client.genialo = {};
 
 // ====================================
-// register command handlers
+// register command handlers & forward configuration
 // ====================================
 client.genialo.handlers = [
-  new (require("./handlers/play").play)()
+  new (require("./handlers/play").play)(config)
 ];
 
 console.log("registered handlers:")
 for (var hdl of client.genialo.handlers)
 {
-  console.log(` ${hdl.id}`)
+  console.log(` - ${hdl.id}`)
 }
 
 // ====================================
@@ -39,7 +46,7 @@ client.on('message', (msg) =>
   {
     if (hdl.handle(msg))
     {
-      console.log(`${msg.content} handled by ${hdl.id}`);
+      console.log(`$ Command: "${msg.content}" handled by ${hdl.id}`);
       return;
     }
   }
@@ -48,4 +55,4 @@ client.on('message', (msg) =>
 // ====================================
 // connect to discord using the bot's oauth token
 // ====================================
-// client.login('NjU5MDcyMDc4MDc4ODA0MDA5.XlwXZw.oOU_ks7e3yvsYwdJkcLr7DSE19E');
+client.login(config.get('discord', 'token'));
