@@ -23,6 +23,7 @@ class player
     return '!play';
   }
 
+  /// global callback when a message comes-in
   handle_msg(message)
   {
     // !play: look for the requested music over on youtube
@@ -35,11 +36,11 @@ class player
         return true;
       }
 
-      let search_term = message.content.replace('!play ','');
-      ytsc(search_term, this._ytsc.opts, (err, results) => {
+      let args = message.content.replace('!play ','');
+      ytsc(args, this._ytsc.opts, (err, results) => {
         if (results.length == 0)
         {
-          message.reply(`no match found for: ${search_term}`);
+          message.reply(`no match found for: ${args}`);
           this._current_search = null;
         }
         else
@@ -49,7 +50,7 @@ class player
             results: []
           };
 
-          let reply_data = `here are the ${this._ytsc.opts.maxResults} top results for your search: **${search_term}** :musical_note:\n`
+          let reply_data = `here are the ${this._ytsc.opts.maxResults} top results for your search: **${args}** :musical_note:\n`
           reply_data += `\n`
 
           for (let ii=0; ii < results.length; ++ii) {
@@ -69,10 +70,10 @@ class player
     /// !choose: Choose from one of the proposed songs after a !play command
     else if (message.content.startsWith('!choose ') && this._current_search != null)
     {
-      let choose_term = message.content.replace('!choose ','').split(' ');
-      if (choose_term.length != 1 ||
-          isNaN(parseInt(choose_term[0])) ||
-          parseInt(choose_term[0]) > this._current_search.results.length)
+      let args = message.content.replace('!choose ','').split(' ');
+      if (args.length != 1 ||
+          isNaN(parseInt(args[0])) ||
+          parseInt(args[0]) > this._current_search.results.length)
       {
         this._current_search.message.reply(`please type-in *!choose <1-${this._current_search.results.length}>* to play/queue the selected track.\n`);
       }
@@ -80,7 +81,7 @@ class player
       {
         // setup the next music queue entry
         this._queue.append({
-          url    : this._current_search.results[parseInt(choose_term[0])-1],
+          url    : this._current_search.results[parseInt(args[0])-1],
           channel: this._current_search.message.channel,
           user   : this._current_search.message.author
         });
@@ -88,7 +89,6 @@ class player
         // clear current search
         this._current_search = null;
       }
-
 
       return true;
     }
@@ -111,18 +111,19 @@ class player
     /// !volume <0-100>
     else if (message.content.startsWith('!volume'))
     {
-      let choose_term = message.content.replace('!volume ','').split(' ');
-      if (choose_term.length != 1 ||
-          isNaN(parseInt(choose_term[0])) ||
-          parseInt(choose_term[0]) < 0 ||
-          parseInt(choose_term[0]) > 100)
+      //parse command argument
+      let args = message.content.replace('!volume ','').split(' ');
+      if (args.length != 1 ||
+          isNaN(parseInt(args[0])) ||
+          parseInt(args[0]) < 0 ||
+          parseInt(args[0]) > 100)
       {
         message.reply(`please type-in *!volume <0-100>* to change the volume.\n`);
       }
       else
       {
-        message.reply(`Volume set to **${choose_term[0]}**.\n`);
-        this._queue.volume = parseInt(choose_term[0]) / 100.;
+        message.reply(`Volume set to **${args[0]}**.\n`);
+        this._queue.volume = parseInt(args[0]) / 100.;
       }
       return true;
     }
