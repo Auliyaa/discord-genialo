@@ -21,7 +21,7 @@ client.genialo = {};
 // register command handlers & forward configuration
 // ====================================
 client.genialo.handlers = [
-  new (require("./handlers/play").play)(config)
+  new (require("./handlers/music").player)(config)
 ];
 
 console.log("registered handlers:")
@@ -44,7 +44,7 @@ client.on('message', (msg) =>
 {
   for (let hdl of msg.client.genialo.handlers)
   {
-    if (hdl.handle(msg))
+    if (hdl.handle_msg(msg))
     {
       console.log(`$ Command: "${msg.content}" handled by ${hdl.id}`);
       return;
