@@ -26,7 +26,7 @@ class music_queue
     }
     else
     {
-      entry.channel.send(`:clock1: Your song is now in queue at position **#${this._entries.length}**!`);
+      entry.channel.send(`:clock1: Your song is now in queue at position **#${this._entries.length}** :clock1:`);
     }
   }
 
@@ -71,7 +71,7 @@ class music_queue
     }
 
     // playback requested song
-    current.channel.send(`:musical_note: Now playing: ${current.url}`);
+    current.channel.send(`:headphones: Now playing **${current.url}** :headphones:`);
     this._dispatcher = this._cx.play(ytdl(current.url, {filter: 'audioonly'}), { volume: this._volume });
 
     // when the song ends: skip to the next song, if available.

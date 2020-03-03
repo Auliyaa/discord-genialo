@@ -16,6 +16,7 @@ class player
       results: []
     };
     this._queue = new (require("./music/queue").music_queue)(cfg);
+    this._troll = false;
   }
 
   get id() {
@@ -30,21 +31,24 @@ class player
     {
       if (d.voice_channel(message.channel.guild, message.author) == null)
       {
-        message.reply("you need to be in a voice channel.");
+        message.reply("you need to be in a voice channel. :warning:");
         return true;
       }
-
-      this._current_search.message = message;
-      this._current_search.results = [];
 
       let search_term = message.content.replace('!play ','');
       ytsc(search_term, this._ytsc.opts, (err, results) => {
         if (results.length == 0)
         {
           message.reply(`no match found for: ${search_term}`);
+          this._current_search = null;
         }
         else
         {
+          this._current_search = {
+            message: message,
+            results: []
+          };
+
           let reply_data = `here are the ${this._ytsc.opts.maxResults} top results for your search: **${search_term}** :musical_note:\n`
           reply_data += `\n`
 
@@ -63,9 +67,7 @@ class player
     }
 
     /// !choose: Choose from one of the proposed songs after a !play command
-    else if (message.content.startsWith('!choose ') &&
-             this._current_search.message != null &&
-             this._current_search.results.length > 0)
+    else if (message.content.startsWith('!choose ') && this._current_search != null)
     {
       let choose_term = message.content.replace('!choose ','').split(' ');
       if (choose_term.length != 1 ||
@@ -77,12 +79,16 @@ class player
       else
       {
         // setup the next music queue entry
-        let sz = this._queue.append({
-          url: this._current_search.results[parseInt(choose_term[0])-1],
+        this._queue.append({
+          url    : this._current_search.results[parseInt(choose_term[0])-1],
           channel: this._current_search.message.channel,
-          user: this._current_search.message.author
+          user   : this._current_search.message.author
         });
+
+        // clear current search
+        this._current_search = null;
       }
+
 
       return true;
     }
@@ -90,14 +96,41 @@ class player
     /// !skip: Skip to the next song in queue
     else if (message.content.startsWith('!skip'))
     {
+      message.reply(`Skipping to next song.`);
       this._queue.next();
     }
 
     /// !stop: Clears the queue & stop the current song.
     else if (message.content.startsWith('!stop'))
     {
+      message.reply(":octagonal_sign: Stopping :octagonal_sign:");
       this._queue._entries = [];
       this._queue.next();
+    }
+
+    /// !volume <0-100>
+    else if (message.content.startsWith('!volume'))
+    {
+      let choose_term = message.content.replace('!volume ','').split(' ');
+      if (choose_term.length != 1 ||
+          isNaN(parseInt(choose_term[0])) ||
+          parseInt(choose_term[0]) < 0 ||
+          parseInt(choose_term[0]) > 100)
+      {
+        message.reply(`please type-in *!volume <0-100>* to change the volume.\n`);
+      }
+      else
+      {
+        message.reply(`Volume set to **${choose_term[0]}**.\n`);
+        this._queue.volume = parseInt(choose_term[0]) / 100.;
+      }
+      return true;
+    }
+
+    else if (message.content.startsWith('!troll'))
+    {
+      this._troll = !this._troll;
+      return false;
     }
 
     return false;
