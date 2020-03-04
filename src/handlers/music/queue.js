@@ -100,6 +100,18 @@ class music_queue
   {
     return this._dispatcher != null;
   }
+
+  /// return the title of each entry in the current queue
+  get entries()
+  {
+    let result = []
+    for (let e of this._entries)
+    {
+      result.push(e.title)
+    }
+    return result
+  }
+  
 }
 
 module.exports.music_queue = music_queue;
