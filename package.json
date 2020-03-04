@@ -1,0 +1,18 @@
+{
+  "name": "discord-genialo",
+  "version": "1.0.0",
+  "description": "An all-around discord bot with easy self-hosting capabilities.",
+  "main": "src/index.js",
+  "scripts": {
+    "bot": "node src/index.js ./genialo.conf"
+  },
+  "author": "Ludwig Fiolka <ludwig.fiolka@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/opus": "^0.1.0",
+    "configparser": "^0.3.6",
+    "discord.js": "^12.0.0",
+    "youtube-search": "^1.1.4",
+    "ytdl": "^1.2.0"
+  }
+}
