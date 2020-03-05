@@ -1,64 +1,24 @@
-const discord = require('discord.js');
-const cfg_parser = require('configparser')
+const _configparser = require('configparser');
+const _genialo      = require('./genialo');
+const ytdl          = require('ytdl-core');
 
-// ====================================
-// parse configuration
-// ====================================
-const config = new cfg_parser();
-
-if (process.argv.length >= 3) {
-  config.read(process.argv[2]);
-}
-else {
-  config.read("/etc/genialo.conf");
-}
-
-// ====================================
-// create the main discord client handle
-// ====================================
-const client = new discord.Client();
-
-// ====================================
-// insert our state machine object
-// ====================================
-client.genialo = {};
-
-// ====================================
-// register command handlers & forward configuration
-// ====================================
-client.genialo.handlers = [
-  new (require("./handlers/music").player)(config)
-];
-
-console.log("registered handlers:")
-for (var hdl of client.genialo.handlers)
+async function __main__()
 {
-  console.log(` - ${hdl.id}`)
-}
+  // parse configuration
+  const config = new _configparser();
 
-// ====================================
-// register events
-// ====================================
-// "ready": triggered once the client is connected to discord servers
-client.on('ready', () =>
-{
-  client.genialo.ready = true;
-});
-
-// "message": triggered when a new message has been sent to one of the visible channels.
-client.on('message', (msg) =>
-{
-  for (let hdl of msg.client.genialo.handlers)
+  if (process.argv.length >= 3)
   {
-    if (hdl.handle_msg(msg))
-    {
-      console.log(`$ Command: "${msg.content}" handled by ${hdl.id}`);
-      return;
-    }
+    config.read(process.argv[2]);
   }
-});
+  else
+  {
+    config.read("/etc/genialo.conf");
+  }
 
-// ====================================
-// connect to discord using the bot's oauth token
-// ====================================
-client.login(config.get('discord', 'token'));
+  // create the client & connect to discord
+  const bot = new _genialo.genialo(config);
+  await bot.connect();
+}
+
+__main__();
