@@ -5,7 +5,13 @@ const cfg_parser = require('configparser')
 // parse configuration
 // ====================================
 const config = new cfg_parser();
-config.read(process.argv[2]);
+
+if (process.argv.length >= 3) {
+  config.read(process.argv[2]);
+}
+else {
+  config.read("/etc/genialo.conf");
+}
 
 // ====================================
 // create the main discord client handle
