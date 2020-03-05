@@ -42,7 +42,11 @@ class music_queue
 
     if (this._entries.length == 0)
     {
-      // no more song to play: stop there
+      // no more song to play: stop there & disconnect
+      if (this._cx != null) {
+        this._cx.disconnect();
+        this._cx = null;
+      }
       return null;
     }
 
@@ -111,7 +115,7 @@ class music_queue
     }
     return result
   }
-  
+
 }
 
 module.exports.music_queue = music_queue;
