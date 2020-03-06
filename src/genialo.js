@@ -133,7 +133,9 @@ class genialo
     if (!this.playing)
     {
       this.queue_next();
+      return undefined;
     }
+    return this.voice.queue.length;
   }
 
   /// plays the next audio in queue

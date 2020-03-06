@@ -1,3 +1,5 @@
+const _ytsc = require('youtube-search');
+
 class player
 {
   get ID()
@@ -8,6 +10,11 @@ class player
   constructor(genialo)
   {
     this.genialo = genialo;
+
+    this.ytsc.opts = {
+      maxResults: 5,
+      key: genialo.config.get('youtube','token')
+    };
   }
 
   handle_play(str, message)
@@ -32,10 +39,21 @@ class player
     if (re.test(str))
     {
       // youtube url: queue requested song immediately
+      audio = _ytdl.bind(str, {filter: 'audioonly'});
     }
     else
     {
       // search string: search youtube and queue first match
+      _ytsc(str, this.ytsc.opts, (err, results) => {
+        if (results.length == 0 && (!err || err.length == 0))
+        {
+          err = `no match found for: ${str}`;
+        }
+        if (err && err.length > 0)
+        {
+          message.channel.send(`:no_entry: YouTube search finished with error: ${err} :no_entry:`);
+        }
+      });
     }
   }
 
