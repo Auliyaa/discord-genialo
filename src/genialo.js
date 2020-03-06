@@ -21,28 +21,29 @@ class genialo
 
       async connect(target)
       {
-        if (this.dispatcher != null)
-        {
-          this.dispatcher.destroy();
-          this.dispatcher = null;
-        }
+        this.stop();
         this.channel    = target;
         this.connection = await this.channel.join();
       },
 
       disconnect()
       {
+        this.stop();
         if (this.connection != null)
         {
           this.connection.disconnect();
           this.connection = null;
         }
+        this.channel = null;
+      },
+
+      stop()
+      {
         if (this.dispatcher != null)
         {
           this.dispatcher.destroy();
           this.dispatcher = null;
         }
-        this.channel = null;
       }
     };
   }
@@ -118,10 +119,17 @@ class genialo
     return this.voice.dispatcher != null;
   }
 
+  /// true when developer mode is enabled in the configuration
+  get developer()
+  {
+    return this.config.get('genialo', 'developer') == 'true';
+  }
+
   /// queue an audio stream to be played in a specific target
-  queue(target_channel, audio, on_start, on_finish)
+  push_audio(target_channel, name, audio, on_start, on_finish)
   {
     this.voice.queue.push({
+      name  : name,
       target: target_channel,
       audio : audio,
       callbacks: {
@@ -132,14 +140,14 @@ class genialo
 
     if (!this.playing)
     {
-      this.queue_next();
+      this.next_audio();
     }
 
     return this.voice.queue.length;
   }
 
   /// plays the next audio in queue
-  async queue_next()
+  async next_audio()
   {
     if (this.voice.queue.length == 0)
     {
@@ -156,6 +164,9 @@ class genialo
       // current voice channel is not the entry's target: disconnect from current voice channel
       this.voice.disconnect();
     }
+
+    // stop any previous playback
+    this.voice.stop();
 
     // connect to the target voice channel
     await this.voice.connect(entry.target);
@@ -175,7 +186,7 @@ class genialo
       {
         entry.callbacks.finish();
       }
-      this.queue_next();
+      this.next_audio();
     });
   }
 
