@@ -8,6 +8,8 @@ class genialo
     this.config = config;
     this.client = new discord.Client();
 
+    this.handlers = {};
+
     this.voice = {
       connection: null,
       channel   : null,
@@ -58,6 +60,39 @@ class genialo
   disconnect()
   {
     // TODO
+  }
+
+  /// add a handler callback for a given event from the client
+  register(event_id, handler_id, callback)
+  {
+    if (!(event_id in this.handlers))
+    {
+      // no callback was registered for this event id, update client callbacks
+      this.handlers[event_id] = [];
+      this.client.on(event_id, ((...args) => {
+        for (let h of this.handlers[event_id])
+        {
+          h.cb(args);
+        }
+      }).bind(this));
+    }
+    if (this.handlers[event_id].find(e => e.id == handler_id))
+    {
+      // handler id already registered: skipping
+      return;
+    }
+    this.handlers[event_id].push({
+      id: handler_id,
+      cb: callback
+    });
+  }
+
+  unregister(event_id, handler_id)
+  {
+    if (event_id in this.handlers)
+    {
+      this.handlers[event_id] = this.handlers[event_id].filter(e => e.id != handler_id);
+    }
   }
 
   /// change volume for all voice actions
