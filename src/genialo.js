@@ -9,6 +9,8 @@ class genialo
     this.client = new discord.Client();
 
     this.handlers = {};
+    // internal handler data segment.
+    this.hdata = {};
 
     this.voice = {
       connection: null,
@@ -79,8 +81,9 @@ class genialo
     if (this.handlers[event_id].find(e => e.id == handler_id))
     {
       // handler id already registered: skipping
-      return;
+      throw `${handler_id} already registered for event ${event_id}`
     }
+
     this.handlers[event_id].push({
       id: handler_id,
       cb: callback
@@ -162,7 +165,7 @@ class genialo
     }
 
     // start playback
-    this.voice.dispatcher = this.voice.connection.play(entry.audio, { volume: this.voice.volume });
+    this.voice.dispatcher = this.voice.connection.play(entry.audio(), { volume: this.voice.volume });
     // register callbacks
     this.voice.dispatcher.on('finish', () =>
     {

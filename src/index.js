@@ -1,6 +1,8 @@
 const _configparser = require('configparser');
 const _genialo      = require('./genialo');
-const ytdl          = require('ytdl-core');
+
+// handlers
+const _player       = require('./player/player');
 
 async function __main__()
 {
@@ -19,6 +21,8 @@ async function __main__()
   // create the client & connect to discord
   const bot = new _genialo.genialo(config);
   await bot.connect();
+
+  _player.register(bot);
 }
 
 __main__();
