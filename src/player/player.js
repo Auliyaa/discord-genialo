@@ -1,4 +1,5 @@
 const _ytsc = require('youtube-search');
+const _ytdl = require('ytdl-core');
 
 class player
 {
@@ -11,13 +12,62 @@ class player
   {
     this.genialo = genialo;
 
-    this.ytsc.opts = {
-      maxResults: 5,
-      key: genialo.config.get('youtube','token')
+    this.ytsc = {
+      opts: {
+        maxResults: 5,
+        key: genialo.config.get('youtube','token')
+      }
     };
   }
 
-  handle_play(str, message)
+  youtube_search(str)
+  {
+    return new Promise(resolve => {
+      // check if the requested string is a url
+      let re = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/g;
+      if (re.test(str))
+      {
+        // youtube url: queue requested song immediately
+        resolve({
+          error: undefined,
+          results: [
+            { url: str, title: str }
+          ]
+        });
+      }
+      else
+      {
+        // search string: search youtube and return first matches as defined by this.ytsc.opts
+        _ytsc(str, this.ytsc.opts, (err, results) => {
+          if (!results || results.length == 0)
+          {
+            err = `no match found for: ${str}`;
+          }
+          if (err)
+          {
+            resolve({
+              error  : err,
+              results: []
+            });
+          }
+          let r = [];
+          for (let result of results)
+          {
+            r.push({
+              url  : result.link,
+              title: result.title
+            });
+          }
+          resolve({
+            error  : undefined,
+            results: r
+          });
+        });
+      }
+    });
+  }
+
+  async handle_play(str, message)
   {
     // check arguments
     if (str.length == 0)
@@ -33,27 +83,20 @@ class player
       return;
     }
 
-    // check if the requested string is a url
-    let audio = undefined;
-    let re = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/g;
-    if (re.test(str))
+    let r = await this.youtube_search(str);
+    if (r.error)
     {
-      // youtube url: queue requested song immediately
-      audio = _ytdl.bind(str, {filter: 'audioonly'});
+      message.channel.send(`:warning: YouTube search failed: ${r.error} :warning:`)
+      return;
     }
-    else
+
+    let len = this.genialo.queue(voice_channel, _ytdl.bind(this, r.results[0].url, {filter: 'audioonly'}),
+                () => {
+                  message.channel.send(`:musical_note: Now playing **${r.results[0].title}** :musical_note:\n${r.results[0].url}`);
+                });
+    if (len !== 0)
     {
-      // search string: search youtube and queue first match
-      _ytsc(str, this.ytsc.opts, (err, results) => {
-        if (results.length == 0 && (!err || err.length == 0))
-        {
-          err = `no match found for: ${str}`;
-        }
-        if (err && err.length > 0)
-        {
-          message.channel.send(`:no_entry: YouTube search finished with error: ${err} :no_entry:`);
-        }
-      });
+      message.channel.send(`:clock: Your song **${r.results[0].title}** has been queued in position #${len} :clock:`);
     }
   }
 
