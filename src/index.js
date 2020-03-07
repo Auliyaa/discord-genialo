@@ -3,6 +3,7 @@ const _genialo      = require('./genialo');
 
 // handlers
 const _player       = require('./player/player');
+const _gamedeals    = require('./gamedeals/gamedeals');
 
 async function __main__()
 {
@@ -23,6 +24,7 @@ async function __main__()
   await bot.connect();
 
   _player.register(bot);
+  _gamedeals.register(bot);
 }
 
 __main__();
