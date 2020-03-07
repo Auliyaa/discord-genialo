@@ -1,0 +1,13 @@
+diff --git a/node_modules/discord.js/src/structures/MessageEmbed.js b/node_modules/discord.js/src/structures/MessageEmbed.js
+index eb67b95..a624038 100644
+--- a/node_modules/discord.js/src/structures/MessageEmbed.js
++++ b/node_modules/discord.js/src/structures/MessageEmbed.js
+@@ -430,7 +430,7 @@ class MessageEmbed {
+    */
+   static normalizeFields(...fields) {
+     return fields
+-      .flat(2)
++      .reduce((acc, val) => acc.concat(val), [])
+       .map(field =>
+         this.normalizeField(
+           field && field.name,
