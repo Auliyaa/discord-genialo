@@ -90,7 +90,7 @@ class player
       return;
     }
 
-    let len = this.genialo.push_audio(voice_channel, _ytdl.bind(this, r.results[0].url, {filter: 'audioonly'}),
+    let len = this.genialo.push_audio(voice_channel, r.results[0].title, _ytdl.bind(this, r.results[0].url, {filter: 'audioonly'}),
                 () => {
                   message.channel.send(`:musical_note: Now playing **${r.results[0].title}** :musical_note:\n${r.results[0].url}`);
                 });
@@ -169,7 +169,7 @@ class player
     // fetch chosen entry and clear current search
     let p = this.current_search.results[parseInt(args[0])-1];
     this.current_search = null;
-    let len = this.genialo.push_audio(voice_channel, _ytdl.bind(this, p.url, {filter: 'audioonly'}),
+    let len = this.genialo.push_audio(voice_channel, p.title, _ytdl.bind(this, p.url, {filter: 'audioonly'}),
                 () => {
                   message.channel.send(`:musical_note: Now playing **${p.title}** :musical_note:\n${p.url}`);
                 });
