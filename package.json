@@ -1,9 +1,10 @@
 {
   "name": "discord-genialo",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "An all-around discord bot with easy self-hosting capabilities.",
   "main": "src/index.js",
   "scripts": {
+    "postinstall": "patch-package",
     "bot": "node src/index.js ./genialo.conf",
     "debug": "node --inspect-brk=5858 src/index.js ./genialo.conf"
   },
@@ -14,6 +15,7 @@
     "configparser": "^0.3.6",
     "discord.js": "^12.0.0",
     "node-rest-client": "^3.1.0",
+    "patch-package": "^6.2.1",
     "yt-search": "^1.1.2",
     "ytdl": "^1.2.0"
   }
