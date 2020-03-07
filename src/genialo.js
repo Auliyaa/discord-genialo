@@ -13,6 +13,7 @@ class genialo
     this.hdata = {};
 
     this.voice = {
+      genialo   : this,
       connection: null,
       channel   : null,
       dispatcher: null,
@@ -21,9 +22,12 @@ class genialo
 
       async connect(target)
       {
-        this.stop();
-        this.channel    = target;
-        this.connection = await this.channel.join();
+        return new Promise(async resolve => {
+          this.stop();
+          this.channel    = target;
+          this.connection = await this.channel.join();
+          this.genialo.voice_play('./samples/join.mp3', () => { resolve(); });
+        });
       },
 
       disconnect()
@@ -126,10 +130,9 @@ class genialo
   }
 
   /// queue an audio stream to be played in a specific target
-  push_audio(target_channel, name, audio, on_start, on_finish)
+  push_audio(target_channel, audio, on_start, on_finish)
   {
     this.voice.queue.push({
-      name  : name,
       target: target_channel,
       audio : audio,
       callbacks: {
@@ -168,8 +171,11 @@ class genialo
     // stop any previous playback
     this.voice.stop();
 
-    // connect to the target voice channel
-    await this.voice.connect(entry.target);
+    if (this.voice.channel == null)
+    {
+      // connect to the target voice channel
+      await this.voice.connect(entry.target);
+    }
 
     // trigger user callback
     if (entry.callbacks.start)
@@ -178,9 +184,7 @@ class genialo
     }
 
     // start playback
-    this.voice.dispatcher = this.voice.connection.play(entry.audio(), { volume: this.voice.volume });
-    // register callbacks
-    this.voice.dispatcher.on('finish', () =>
+    this.voice_play(entry.audio(), () =>
     {
       if (entry.callbacks.finish)
       {
@@ -188,6 +192,13 @@ class genialo
       }
       this.next_audio();
     });
+  }
+
+  voice_play(audio, on_finish)
+  {
+    // forward to dispatcher
+    this.voice.dispatcher = this.voice.connection.play(audio, { volume: this.voice.volume });
+    this.voice.dispatcher.on('finish', on_finish);
   }
 
   /// list all channels in a given user is currently in
