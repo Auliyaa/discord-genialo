@@ -1,6 +1,6 @@
 {
   "name": "discord-genialo",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "An all-around discord bot with easy self-hosting capabilities.",
   "main": "src/index.js",
   "scripts": {
@@ -13,6 +13,7 @@
     "@discordjs/opus": "^0.1.0",
     "configparser": "^0.3.6",
     "discord.js": "^12.0.0",
+    "node-rest-client": "^3.1.0",
     "yt-search": "^1.1.2",
     "ytdl": "^1.2.0"
   }
