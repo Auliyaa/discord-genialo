@@ -126,7 +126,7 @@ class genialo
   /// true when developer mode is enabled in the configuration
   get developer()
   {
-    return this.config.get('genialo', 'developer') == 'true';
+    return this.config.get('genialo', 'developer');
   }
 
   /// queue an audio stream to be played in a specific target
