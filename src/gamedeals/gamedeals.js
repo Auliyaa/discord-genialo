@@ -34,7 +34,6 @@ class gamedeals
     if (this.genialo.config.get('gamedeals', 'hour') && this.channel)
     {
       // post immediately and start timer
-      this.post(this.channel);
       this.interval = genialo.client.setInterval((async () => {
         if (new Date().getHours() != parseInt(this.genialo.config.get('gamedeals', 'hour')))
         {
