@@ -84,6 +84,15 @@ class player
     }
 
     let r = await this.youtube_search(str);
+    if (!r)
+    {
+      r = {error: "internal error"};
+    }
+    else if (!r.error && (!r.results || r.results.length == 0))
+    {
+      r.error = "no result";
+    }
+
     if (r.error)
     {
       message.channel.send(`:warning: YouTube search failed: ${r.error} :warning:`)
