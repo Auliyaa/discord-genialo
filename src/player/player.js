@@ -273,7 +273,7 @@ function register(genialo)
 
   genialo.register("message", p.ID, (args) =>
   {
-    if (genialo.developer && args[0].author.username !== 'Auliyaa')
+    if (genialo.developer && args[0].channel.id !== genialo.developer)
     {
       return;
     }
