@@ -79,6 +79,17 @@ class genialo
       this.client.on(event_id, ((...args) => {
         for (let h of this.handlers[event_id])
         {
+          let restrict_channel = this.config.get(`restrict-${event_id}`, handler_id);
+          if (restrict_channel)
+          {
+            for (let arg of args)
+            {
+              if (arg.channel && arg.channel.id != restrict_channel)
+              {
+                return;
+              }
+            }
+          }
           h.cb(args);
         }
       }).bind(this));
