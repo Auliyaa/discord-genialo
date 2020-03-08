@@ -98,10 +98,6 @@ async function register(genialo)
 
   genialo.register("message", h.ID, (args) =>
   {
-    if (genialo.developer && args[0].channel.id !== genialo.developer)
-    {
-      return;
-    }
     h.on_message(args[0]);
   });
 

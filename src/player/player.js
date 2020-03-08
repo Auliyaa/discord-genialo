@@ -282,10 +282,6 @@ function register(genialo)
 
   genialo.register("message", p.ID, (args) =>
   {
-    if (genialo.developer && args[0].channel.id !== genialo.developer)
-    {
-      return;
-    }
     p.on_message(args[0]);
   });
 
