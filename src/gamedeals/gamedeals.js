@@ -34,7 +34,7 @@ class gamedeals
     if (this.genialo.config.get('gamedeals', 'hour') && this.channel)
     {
       // post immediately and start timer
-      this.post();
+      this.post(this.channel);
       this.interval = genialo.client.setInterval((async () => {
         if (new Date().getHours() != parseInt(this.genialo.config.get('gamedeals', 'hour')))
         {
@@ -49,11 +49,11 @@ class gamedeals
   {
     // fetch results & send messages
     let r = await this.fetch();
-    this.channel.send(`:moneybag: Here are the top ${r.length} deals of the day from /r/gamedeals :moneybag:\n`);
+    channel.send(`:moneybag: Here are the top ${r.length} deals of the day from /r/gamedeals :moneybag:\n`);
     for (let ii=0; ii < r.length; ++ii)
     {
       let post = r[ii];
-      this.channel.send(`\`\`\`#${ii+1}: ${post.title} (+${post.score})\n\nhttp://www.reddit.com/${post.link}\`\`\``);
+      channel.send(`\`\`\`#${ii+1}: ${post.title} (+${post.score})\n\nhttp://www.reddit.com/${post.link}\`\`\``);
     }
   }
 
@@ -99,7 +99,7 @@ async function register(genialo)
 
   genialo.register("message", h.ID, (args) =>
   {
-    if (genialo.developer && args[0].author.username !== 'Auliyaa')
+    if (genialo.developer && args[0].channel.id !== genialo.developer)
     {
       return;
     }
