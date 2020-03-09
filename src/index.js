@@ -13,10 +13,12 @@ async function __main__()
 
   if (process.argv.length >= 3)
   {
+    console.log(`.. reading configuration from ${process.argv[2]}`);
     config.read(process.argv[2]);
   }
   else
   {
+    console.log(`.. reading configuration from /etc/genialo.conf`);
     config.read("/etc/genialo.conf");
   }
 
