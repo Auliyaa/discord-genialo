@@ -26,7 +26,7 @@ class genialo
           this.stop();
           this.channel    = target;
           this.connection = await this.channel.join();
-          this.genialo.voice_play('./samples/join.mp3', () => { resolve(); });
+          this.genialo.voice.play('./samples/join.mp3', () => { resolve(); });
         });
       },
 
@@ -48,6 +48,13 @@ class genialo
           this.dispatcher.destroy();
           this.dispatcher = null;
         }
+      },
+
+      play(audio, on_finish)
+      {
+        // forward to dispatcher
+        this.dispatcher = this.connection.play(audio, { volume: this.volume });
+        this.dispatcher.on('finish', on_finish);
       }
     };
   }
@@ -196,7 +203,7 @@ class genialo
     }
 
     // start playback
-    this.voice_play(entry.audio(), () =>
+    this.voice.play(entry.audio(), () =>
     {
       if (entry.callbacks.finish)
       {
@@ -204,13 +211,6 @@ class genialo
       }
       this.next_audio();
     });
-  }
-
-  voice_play(audio, on_finish)
-  {
-    // forward to dispatcher
-    this.voice.dispatcher = this.voice.connection.play(audio, { volume: this.voice.volume });
-    this.voice.dispatcher.on('finish', on_finish);
   }
 
   /// list all channels in a given user is currently in
