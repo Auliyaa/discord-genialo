@@ -141,12 +141,6 @@ class genialo
     return this.voice.dispatcher != null;
   }
 
-  /// true when developer mode is enabled in the configuration
-  get developer()
-  {
-    return this.config.get('genialo', 'developer');
-  }
-
   /// queue an audio stream to be played in a specific target
   push_audio(target_channel, name, audio, on_start, on_finish)
   {
