@@ -68,17 +68,20 @@ class player
     });
   }
 
-  // return the proper downloader for a given url, based on the url provider
-  downloader(url)
+  /// return the proper fetcher for a given url, based on the url provider
+  /// the result value is a function with no parameter that returns a stream / value consumable by discord.js
+  song_fetcher(url)
   {
     let re_youtube = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/g;
     let re_soundcloud = /^https?:\/\/soundcloud.com\/.+$/g;
     if (re_youtube.test(url))
     {
+      // youtube url: use ytdl-core module
       return _ytdl.bind(this, url, {filter: 'audioonly'});
     }
     else if (re_soundcloud.test(url))
     {
+      // soundcloud url: use youtube-dl module
       return _sndl.bind(this, url, ['-x'])
     }
     return () => { return url };
@@ -116,7 +119,7 @@ class player
       return;
     }
 
-    let len = this.genialo.voice.push(voice_channel, r.results[0].title, this.downloader(r.results[0].url),
+    let len = this.genialo.voice.push(voice_channel, r.results[0].title, this.song_fetcher(r.results[0].url),
                 () => {
                   message.channel.send(`:musical_note: Now playing **${r.results[0].title}** :musical_note:\n${r.results[0].url}`);
                 });
@@ -195,7 +198,7 @@ class player
     // fetch chosen entry and clear current search
     let p = this.current_search.results[parseInt(args[0])-1];
     this.current_search = null;
-    let len = this.genialo.voice.push(voice_channel, p.title, this.downloader(p.url),
+    let len = this.genialo.voice.push(voice_channel, p.title, this.song_fetcher(p.url),
                 () => {
                   message.channel.send(`:musical_note: Now playing **${p.title}** :musical_note:\n${p.url}`);
                 });
