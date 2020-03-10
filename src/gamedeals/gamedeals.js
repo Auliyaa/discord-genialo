@@ -1,6 +1,6 @@
 const rest = require('node-rest-client').Client;
 
-class gamedeals
+class gamedeals extends require('../handler').handler
 {
   get ID()
   {
@@ -9,6 +9,8 @@ class gamedeals
 
   constructor(genialo)
   {
+    super(genialo);
+
     this.genialo = genialo;
     this.client = new rest();
     this.opts = {
@@ -83,12 +85,9 @@ class gamedeals
     });
   }
 
-  on_message(message)
+  handle_gamedeals(args, message)
   {
-    if (message.content == '!gamedeals')
-    {
-      this.post(message.channel);
-    }
+    this.post(message.channel);
   }
 }
 
