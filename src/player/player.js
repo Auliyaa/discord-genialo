@@ -2,7 +2,7 @@ const _ytsc = require('yt-search');
 const _ytdl = require('ytdl-core');
 const _sndl = require('youtube-dl');
 
-class player
+class player extends require('../handler').handler
 {
   get ID()
   {
@@ -11,7 +11,7 @@ class player
 
   constructor(genialo)
   {
-    this.genialo = genialo;
+    super(genialo);
 
     this.ytsc = {
       max_results: 5
@@ -268,31 +268,6 @@ class player
       m += `*!queue clear*: Removes all queued entries.\n`;
       message.channel.send(m);
     }
-  }
-
-  on_message(message)
-  {
-    // message is handled it it fits the following pattern:
-    // <!command> <args>
-    // where supported commands are documented in this class
-    if (message.content.startsWith(this.genialo.prefix))
-    {
-      let args = message.content.split(' ');
-      let cmd  = args[0].split(this.genialo.prefix)[1];
-      args.shift();
-
-      let h = this.mlocate(`handle_${cmd}`);
-      if (h)
-      {
-        h.bind(this)(args.join(' '), message);
-      }
-    }
-  }
-
-  mlocate(name)
-  {
-    let r = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).find(n => { return n == name });
-    return (r ? this[r] : undefined);
   }
 }
 
