@@ -85,7 +85,7 @@ class gamedeals
 
   on_message(message)
   {
-    if (message.content == '!gamedeals')
+    if (message.content == `${this.genialo.prefix}gamedeals`)
     {
       this.post(message.channel);
     }

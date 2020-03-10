@@ -275,10 +275,10 @@ class player
     // message is handled it it fits the following pattern:
     // <!command> <args>
     // where supported commands are documented in this class
-    if (message.content.startsWith('!'))
+    if (message.content.startsWith(this.genialo.prefix))
     {
       let args = message.content.split(' ');
-      let cmd  = args[0].split('!')[1];
+      let cmd  = args[0].split(this.genialo.prefix)[1];
       args.shift();
 
       let h = this.mlocate(`handle_${cmd}`);

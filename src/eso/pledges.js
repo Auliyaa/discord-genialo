@@ -72,7 +72,7 @@ class pledges
 
   on_message(message)
   {
-    if (message.content == '!pledges')
+    if (message.content == `${this.genialo.prefix}pledges`)
     {
       let d = new Date();
       this.send_pledges(d, 'Today`s pledges', message.channel);

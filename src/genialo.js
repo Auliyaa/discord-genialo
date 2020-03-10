@@ -16,6 +16,13 @@ class genialo
     this.voice = new voice.genialo_voice(this);
   }
 
+  /// return the global command prefix character
+  get prefix()
+  {
+    let r = this.config.get('general', 'prefix');
+    return r ? r : '!';
+  }
+
   /// connect using the token provided in the configuration
   connect()
   {
