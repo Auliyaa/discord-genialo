@@ -78,7 +78,7 @@ class genialo_voice
   }
 
   /// queue an audio stream to be played in a specific target
-  push(target_channel, name, audio, on_start, on_finish)
+  async push(target_channel, name, audio, on_start, on_finish)
   {
     this.queue.push({
       name  : name,
@@ -92,7 +92,7 @@ class genialo_voice
 
     if (!this.playing)
     {
-      this.next();
+      await this.next();
     }
 
     return this.queue.length;
