@@ -1,14 +1,16 @@
 const rest = require('node-rest-client').Client;
 
-class gamedeals
+class gamedeals extends require('../handler').handler
 {
   get ID()
   {
-    return '!gamedeals';
+    return 'gamedeals';
   }
 
   constructor(genialo)
   {
+    super(genialo);
+
     this.genialo = genialo;
     this.client = new rest();
     this.opts = {
@@ -16,13 +18,13 @@ class gamedeals
     };
 
     // locate target channel if provided in the configuration
-    if (this.genialo.config.get('gamedeals', 'channel'))
+    if (this.get_config('channel'))
     {
       for (let guild of this.genialo.client.guilds.cache)
       {
         for (let channel of guild[1].channels.cache)
         {
-          if (channel[0] == this.genialo.config.get('gamedeals', 'channel'))
+          if (channel[0] == this.get_config('channel'))
           {
             this.channel = channel[1];
           }
@@ -31,11 +33,11 @@ class gamedeals
     }
 
     // start timer if an hour of day has been provide din the configuration
-    if (this.genialo.config.get('gamedeals', 'hour') && this.channel)
+    if (this.get_config('hour') && this.channel)
     {
       // post immediately and start timer
       this.interval = genialo.client.setInterval((async () => {
-        if (new Date().getHours() != parseInt(this.genialo.config.get('gamedeals', 'hour')))
+        if (new Date().getHours() != parseInt(this.get_config('hour')))
         {
           return;
         }
@@ -83,12 +85,9 @@ class gamedeals
     });
   }
 
-  on_message(message)
+  handle_gamedeals(args, message)
   {
-    if (message.content == '!gamedeals')
-    {
-      this.post(message.channel);
-    }
+    this.post(message.channel);
   }
 }
 
@@ -98,10 +97,6 @@ async function register(genialo)
 
   genialo.register("message", h.ID, (args) =>
   {
-    if (genialo.developer && args[0].channel.id !== genialo.developer)
-    {
-      return;
-    }
     h.on_message(args[0]);
   });
 

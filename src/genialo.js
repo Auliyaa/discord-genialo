@@ -1,4 +1,5 @@
 const discord = require('discord.js');
+const voice   = require('./genialo_voice');
 
 /// main class for our bot
 class genialo
@@ -12,44 +13,14 @@ class genialo
     // internal handler data segment.
     this.hdata = {};
 
-    this.voice = {
-      genialo   : this,
-      connection: null,
-      channel   : null,
-      dispatcher: null,
-      volume    : 1,
-      queue     : [],
+    this.voice = new voice.genialo_voice(this);
+  }
 
-      async connect(target)
-      {
-        return new Promise(async resolve => {
-          this.stop();
-          this.channel    = target;
-          this.connection = await this.channel.join();
-          this.genialo.voice_play('./samples/join.mp3', () => { resolve(); });
-        });
-      },
-
-      disconnect()
-      {
-        this.stop();
-        if (this.connection != null)
-        {
-          this.connection.disconnect();
-          this.connection = null;
-        }
-        this.channel = null;
-      },
-
-      stop()
-      {
-        if (this.dispatcher != null)
-        {
-          this.dispatcher.destroy();
-          this.dispatcher = null;
-        }
-      }
-    };
+  /// return the global command prefix character
+  get prefix()
+  {
+    let r = this.config.get('general', 'prefix');
+    return r ? r : '!';
   }
 
   /// connect using the token provided in the configuration
@@ -58,9 +29,10 @@ class genialo
     return new Promise(resolve => {
       this.client.on('ready', () =>
       {
+        console.log("client connected");
         resolve('ok');
       });
-      this.client.login(this.config.get('discord', 'token'));
+      this.client.login(this.config.get('general', 'discord_token'));
     });
   }
 
@@ -101,105 +73,6 @@ class genialo
     {
       this.handlers[event_id] = this.handlers[event_id].filter(e => e.id != handler_id);
     }
-  }
-
-  /// change volume for all voice actions
-  set volume(vol)
-  {
-    this.voice.volume = vol;
-    if (this.voice.dispatcher != null)
-    {
-      this.voice.dispatcher.setVolume(this.voice.volume);
-    }
-  }
-  get volume()
-  {
-    return this.voice.volume;
-  }
-
-  /// true when an audio stream is currently being dispatched
-  get playing()
-  {
-    return this.voice.dispatcher != null;
-  }
-
-  /// true when developer mode is enabled in the configuration
-  get developer()
-  {
-    return this.config.get('genialo', 'developer');
-  }
-
-  /// queue an audio stream to be played in a specific target
-  push_audio(target_channel, name, audio, on_start, on_finish)
-  {
-    this.voice.queue.push({
-      name  : name,
-      target: target_channel,
-      audio : audio,
-      callbacks: {
-        start : on_start,
-        finish: on_finish
-      }
-    });
-
-    if (!this.playing)
-    {
-      this.next_audio();
-    }
-
-    return this.voice.queue.length;
-  }
-
-  /// plays the next audio in queue
-  async next_audio()
-  {
-    if (this.voice.queue.length == 0)
-    {
-      // queue is now empty: disconnect from audio
-      this.voice.disconnect();
-      return;
-    }
-
-    // fetch next entry in queue
-    let entry = this.voice.queue.shift();
-
-    if (this.voice.channel != null && entry.target.id != this.voice.channel.id)
-    {
-      // current voice channel is not the entry's target: disconnect from current voice channel
-      this.voice.disconnect();
-    }
-
-    // stop any previous playback
-    this.voice.stop();
-
-    if (this.voice.channel == null)
-    {
-      // connect to the target voice channel
-      await this.voice.connect(entry.target);
-    }
-
-    // trigger user callback
-    if (entry.callbacks.start)
-    {
-      entry.callbacks.start();
-    }
-
-    // start playback
-    this.voice_play(entry.audio(), () =>
-    {
-      if (entry.callbacks.finish)
-      {
-        entry.callbacks.finish();
-      }
-      this.next_audio();
-    });
-  }
-
-  voice_play(audio, on_finish)
-  {
-    // forward to dispatcher
-    this.voice.dispatcher = this.voice.connection.play(audio, { volume: this.voice.volume });
-    this.voice.dispatcher.on('finish', on_finish);
   }
 
   /// list all channels in a given user is currently in

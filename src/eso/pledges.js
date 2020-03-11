@@ -1,13 +1,13 @@
-class pledges
+class pledges extends require('../handler').handler
 {
   get ID()
   {
-    return '!pledges';
+    return 'pledges';
   }
 
   constructor(genialo)
   {
-    this.genialo = genialo;
+    super(genialo);
 
     this.start = new Date();
     this.start.setTime(1582930800000);
@@ -70,17 +70,6 @@ class pledges
     ];
   }
 
-  on_message(message)
-  {
-    if (message.content == '!pledges')
-    {
-      let d = new Date();
-      this.send_pledges(d, 'Today`s pledges', message.channel);
-      d.setTime(d.getTime() + 24*3600*1000);
-      this.send_pledges(d, 'Tomorrow\'s pledges', message.channel);
-    }
-  }
-
   send_pledges(date, title, channel)
   {
     // compute the offset based on the number of days since the start date
@@ -102,6 +91,14 @@ class pledges
 
     channel.send(s);
   }
+
+  handle_pledges(args, message)
+  {
+    let d = new Date();
+    this.send_pledges(d, 'Today`s pledges', message.channel);
+    d.setTime(d.getTime() + 24*3600*1000);
+    this.send_pledges(d, 'Tomorrow\'s pledges', message.channel);
+  }
 }
 
 async function register(genialo)
@@ -110,10 +107,6 @@ async function register(genialo)
 
   genialo.register("message", h.ID, (args) =>
   {
-    if (genialo.developer && args[0].channel.id !== genialo.developer)
-    {
-      return;
-    }
     h.on_message(args[0]);
   });
 

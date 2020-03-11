@@ -1,16 +1,18 @@
 const _ytsc = require('yt-search');
 const _ytdl = require('ytdl-core');
+const _ytpl = require('youtube-playlist');
+const _sndl = require('youtube-dl');
 
-class player
+class player extends require('../handler').handler
 {
   get ID()
   {
-    return '!play';
+    return 'player';
   }
 
   constructor(genialo)
   {
-    this.genialo = genialo;
+    super(genialo);
 
     this.ytsc = {
       max_results: 5
@@ -23,10 +25,10 @@ class player
   {
     return new Promise(resolve => {
       // check if the requested string is a url
-      let re = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/g;
-      if (re.test(str))
+      let re_url = /^http.+$/g;
+      if (re_url.test(str))
       {
-        // youtube url: queue requested song immediately
+        // url: queue requested song immediately
         resolve({
           error: undefined,
           results: [
@@ -67,6 +69,72 @@ class player
     });
   }
 
+  /// return the provider of a given url: youtube, soundcloud
+  provider(url)
+  {
+    let re = /^(?:https?:)\/\/((?:www|m)\.)?((?:youtube\.com|youtu.be))\/.+$/g;
+    if (re.test(url))
+    {
+      return 'youtube';
+    }
+    re = /^(?:https?:)\/\/((?:www|m)\.)?((?:soundcloud.com))\/.+$/g;
+    if (re.test(url))
+    {
+      return 'soundcloud';
+    }
+    return 'unknown';
+  }
+
+  /// push a given url in the current voice queue
+  /// actual way to fetch music data will depend on the url
+  async queue_url(voice_channel, text_channel, url, title, quiet)
+  {
+    return new Promise(async resolve => {
+      // by default: simply forward the url to discord
+      let fn = () => { return url };
+      let prov = this.provider(url);
+      if (prov == 'youtube')
+      {
+        // check if the provided url is a playlist
+        try
+        {
+          _ytpl(url, ['id', 'name', 'url']).then(async results => {
+            // recursively queue all elements from the playlist
+            let r = undefined;
+            for (let result of results.data.playlist)
+            {
+              r = await this.queue_url(voice_channel, text_channel, result.url, result.name, true);
+            }
+            text_channel.send(`:clock: Queued ${results.data.playlist.length} songs from playlist :clock:`);
+            resolve();
+          });
+
+          return;
+        }
+        catch(error)
+        {
+          // not a playlist: consider it as a plain youtube url
+          fn = _ytdl.bind(this, url, {filter: 'audioonly'});
+        }
+      }
+      else if (prov == 'soundcloud')
+      {
+        fn = _sndl.bind(this, url, ['-x']);
+      }
+
+      let r = await this.genialo.voice.push(voice_channel, title, fn, () => {
+        text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
+      });
+
+      if (r !== 0 && !quiet)
+      {
+        text_channel.send(`:clock: Your song **${title}** has been queued in position #${r} :clock:`);
+      }
+
+      resolve();
+    });
+  }
+
   async handle_play(str, message)
   {
     // check arguments
@@ -99,14 +167,7 @@ class player
       return;
     }
 
-    let len = this.genialo.push_audio(voice_channel, r.results[0].title, _ytdl.bind(this, r.results[0].url, {filter: 'audioonly'}),
-                () => {
-                  message.channel.send(`:musical_note: Now playing **${r.results[0].title}** :musical_note:\n${r.results[0].url}`);
-                });
-    if (len !== 0)
-    {
-      message.channel.send(`:clock: Your song **${r.results[0].title}** has been queued in position #${len} :clock:`);
-    }
+    this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title);
   }
 
   async handle_search(str, message)
@@ -145,13 +206,13 @@ class player
     let m = ':notes:Here are the results for your search::notes:\n';
     for (let ii=0; ii < this.current_search.results.length; ++ii)
     {
-      m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title}\n`
+      m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title} (${this.current_search.results[ii].dur})\n`
     }
     m += `Please type-in *!choose <1-${this.current_search.results.length}>*`
     message.channel.send(m);
   }
 
-  handle_choose(str, message)
+  async handle_choose(str, message)
   {
     if (this.current_search == null)
     {
@@ -178,27 +239,21 @@ class player
     // fetch chosen entry and clear current search
     let p = this.current_search.results[parseInt(args[0])-1];
     this.current_search = null;
-    let len = this.genialo.push_audio(voice_channel, p.title, _ytdl.bind(this, p.url, {filter: 'audioonly'}),
-                () => {
-                  message.channel.send(`:musical_note: Now playing **${p.title}** :musical_note:\n${p.url}`);
-                });
-    if (len !== 0)
-    {
-      message.channel.send(`:clock: Your song **${p.title}** has been queued in position #${len} :clock:`);
-    }
+
+    this.queue_url(voice_channel, message.channel, p.url, p.title);
   }
 
   handle_skip(str, message)
   {
     message.channel.send(":fast_forward: Skipping current song :fast_forward:");
-    this.genialo.next_audio();
+    this.genialo.voice.next();
   }
 
   handle_stop(str, message)
   {
     message.channel.send(":octagonal_sign: Stopping :octagonal_sign:");
     this.genialo.voice.queue = [];
-    this.genialo.next_audio();
+    this.genialo.voice.next();
   }
 
   handle_queue(str, message)
@@ -249,31 +304,6 @@ class player
       message.channel.send(m);
     }
   }
-
-  on_message(message)
-  {
-    // message is handled it it fits the following pattern:
-    // <!command> <args>
-    // where supported commands are documented in this class
-    if (message.content.startsWith('!'))
-    {
-      let args = message.content.split(' ');
-      let cmd  = args[0].split('!')[1];
-      args.shift();
-
-      let h = this.mlocate(`handle_${cmd}`);
-      if (h)
-      {
-        h.bind(this)(args.join(' '), message);
-      }
-    }
-  }
-
-  mlocate(name)
-  {
-    let r = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).find(n => { return n == name });
-    return (r ? this[r] : undefined);
-  }
 }
 
 function register(genialo)
@@ -282,10 +312,6 @@ function register(genialo)
 
   genialo.register("message", p.ID, (args) =>
   {
-    if (genialo.developer && args[0].channel.id !== genialo.developer)
-    {
-      return;
-    }
     p.on_message(args[0]);
   });
 
