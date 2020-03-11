@@ -1,5 +1,6 @@
 const _ytsc = require('yt-search');
 const _ytdl = require('ytdl-core');
+const _ytpl = require('youtube-playlist');
 const _sndl = require('youtube-dl');
 
 class player extends require('../handler').handler
@@ -86,22 +87,44 @@ class player extends require('../handler').handler
 
   /// push a given url in the current voice queue
   /// actual way to fetch music data will depend on the url
-  queue_url(voice_channel, text_channel, url, title)
+  async queue_url(voice_channel, text_channel, url, title)
   {
-    // by default: simply forward the url to discord
-    let fn = () => { return url };
-    let prov = this.provider(url);
-    if (prov == 'youtube')
-    {
-      fn = _ytdl.bind(this, url, {filter: 'audioonly'});
-    }
-    else if (prov == 'soundcloud')
-    {
-      fn = _sndl.bind(this, url, ['-x']);
-    }
+    console.log(`queuing voice_channel=${voice_channel}, text_channel=${text_channel}, url=${url}, title=${title}`);
+    return new Promise(async resolve => {
+      // by default: simply forward the url to discord
+      let fn = () => { return url };
+      let prov = this.provider(url);
+      if (prov == 'youtube')
+      {
+        // check if the provided url is a playlist
+        try
+        {
+          _ytpl(url, ['id', 'name', 'url']).then(async results => {
+            let r = undefined;
+            for (let result of results.data.playlist)
+            {
+              r = await this.queue_url(voice_channel, text_channel, result.url, result.name);
+            }
+            resolve(r);
+          });
 
-    return this.genialo.voice.push(voice_channel, title, fn, () => {
-      text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
+          return;
+        }
+        catch(error)
+        {
+          fn = _ytdl.bind(this, url, {filter: 'audioonly'});
+        }
+      }
+      else if (prov == 'soundcloud')
+      {
+        fn = _sndl.bind(this, url, ['-x']);
+      }
+
+      console.log("queue resolved");
+      let r = await this.genialo.voice.push(voice_channel, title, fn, () => {
+        text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
+      });
+      resolve(r);
     });
   }
 
@@ -137,7 +160,7 @@ class player extends require('../handler').handler
       return;
     }
 
-    let len = this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title);
+    let len = await this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title);
 
     if (len !== 0)
     {
@@ -187,7 +210,7 @@ class player extends require('../handler').handler
     message.channel.send(m);
   }
 
-  handle_choose(str, message)
+  async handle_choose(str, message)
   {
     if (this.current_search == null)
     {
@@ -215,7 +238,7 @@ class player extends require('../handler').handler
     let p = this.current_search.results[parseInt(args[0])-1];
     this.current_search = null;
 
-    let len = this.queue_url(voice_channel, message.channel, p.url, p.title);
+    let len = await this.queue_url(voice_channel, message.channel, p.url, p.title);
 
     if (len !== 0)
     {
