@@ -1,4 +1,5 @@
 const rest = require('node-rest-client').Client;
+const discord = require('discord.js');
 
 class gamedeals extends require('../handler').handler
 {
@@ -50,12 +51,30 @@ class gamedeals extends require('../handler').handler
   {
     // fetch results & send messages
     let r = await this.fetch();
-    channel.send(`:moneybag: Here are the top ${r.length} deals of the day from /r/gamedeals :moneybag:\n`);
+    let messageEmbed = new discord.MessageEmbed()
+  	.setColor('#2ebf26')
+  	.setTitle(`:moneybag: /r/gamedeals top ${r.length} deals of the day :moneybag:`)
+  	.setURL('http://www.reddit.com/r/gamedeals')
+  	.setThumbnail('https://styles.redditmedia.com/t5_2qwx3/styles/communityIcon_n3y6x4zozxp01.png')
+  	.setImage('https://img.gg.deals/a4/d4/a2603f87257f54bbec198fd158284df7ded4_740xt.gif')
+  	.setTimestamp()
+  	.setFooter('I love money ... and video games', 'https://styles.redditmedia.com/t5_2qwx3/styles/communityIcon_n3y6x4zozxp01.png');
+
+    const picNumber = [':one:',':two:',':three:',':four:',':five:'];
     for (let ii=0; ii < r.length; ++ii)
     {
       let post = r[ii];
-      channel.send(`\`\`\`#${ii+1}: ${post.title} (+${post.score})\n\nhttp://www.reddit.com/${post.link}\`\`\``);
+      let title = `${picNumber[ii]} **with +${post.score} upvotes**`;
+
+      //make bold titles
+      let value = post.title.replace(/(\[.*\])/,'**$1**');
+      //add newline when detecting |
+      value = value.replace(/\|/g,'\n');
+      //remove html stuff
+      value = value.replace(/\&amp;/g,'');
+      messageEmbed.addField(title,`${value} **[\[...\]](http://www.reddit.com/${post.link})**\n`,false);
     }
+    channel.send(messageEmbed);
   }
 
   async fetch()
