@@ -2,6 +2,7 @@ const _ytsc = require('yt-search');
 const _ytdl = require('ytdl-core');
 const _ytpl = require('youtube-playlist');
 const _sndl = require('youtube-dl');
+const fs    = require('fs');
 
 class player extends require('../handler').handler
 {
@@ -87,8 +88,20 @@ class player extends require('../handler').handler
 
   /// push a given url in the current voice queue
   /// actual way to fetch music data will depend on the url
-  async queue_url(voice_channel, text_channel, url, title, quiet)
+  async queue_url(voice_channel, text_channel, url, title, opts)
   {
+    if (this.genialo.voice.queue.length == 0 &&
+        this.genialo.config.get('genialo', 'join') &&
+        !opts.no_join)
+    {
+      let samples = fs.readdirSync(this.genialo.config.get('genialo', 'join'));
+      let p = `${this.genialo.config.get('genialo', 'join')}/${samples[Math.floor(Math.random()*samples.length)]}`;
+      await this.genialo.voice.push(voice_channel, title, () => { return p; }, () => {});
+      opts = {
+        quiet: true
+      };
+    }
+
     return new Promise(async resolve => {
       // by default: simply forward the url to discord
       let fn = () => { return url };
@@ -103,7 +116,10 @@ class player extends require('../handler').handler
             let r = undefined;
             for (let result of results.data.playlist)
             {
-              r = await this.queue_url(voice_channel, text_channel, result.url, result.name, true);
+              r = this.queue_url(voice_channel, text_channel, result.url, result.name, {
+                quiet  : true,
+                no_join: true
+              });
             }
             text_channel.send(`:clock: Queued ${results.data.playlist.length} songs from playlist :clock:`);
             resolve();
@@ -126,7 +142,7 @@ class player extends require('../handler').handler
         text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
       });
 
-      if (r !== 0 && !quiet)
+      if (r !== 0 && !opts.quiet)
       {
         text_channel.send(`:clock: Your song **${title}** has been queued in position #${r} :clock:`);
       }
@@ -167,7 +183,7 @@ class player extends require('../handler').handler
       return;
     }
 
-    this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title);
+    this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title, {});
   }
 
   async handle_search(str, message)
@@ -240,7 +256,7 @@ class player extends require('../handler').handler
     let p = this.current_search.results[parseInt(args[0])-1];
     this.current_search = null;
 
-    this.queue_url(voice_channel, message.channel, p.url, p.title);
+    this.queue_url(voice_channel, message.channel, p.url, p.title, {});
   }
 
   handle_skip(str, message)
