@@ -68,23 +68,41 @@ class player extends require('../handler').handler
     });
   }
 
-  /// return the proper fetcher for a given url, based on the url provider
-  /// the result value is a function with no parameter that returns a stream / value consumable by discord.js
-  song_fetcher(url)
+  /// return the provider of a given url: youtube, soundcloud
+  provider(url)
   {
-    let re_youtube = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/g;
-    let re_soundcloud = /^https?:\/\/soundcloud.com\/.+$/g;
-    if (re_youtube.test(url))
+    let re = /^(?:https?:)\/\/((?:www|m)\.)?((?:youtube\.com|youtu.be))\/.+$/g;
+    if (re.test(url))
     {
-      // youtube url: use ytdl-core module
-      return _ytdl.bind(this, url, {filter: 'audioonly'});
+      return 'youtube';
     }
-    else if (re_soundcloud.test(url))
+    re = /^(?:https?:)\/\/((?:www|m)\.)?((?:soundcloud.com))\/.+$/g;
+    if (re.test(url))
     {
-      // soundcloud url: use youtube-dl module
-      return _sndl.bind(this, url, ['-x'])
+      return 'soundcloud';
     }
-    return () => { return url };
+    return 'unknown';
+  }
+
+  /// push a given url in the current voice queue
+  /// actual way to fetch music data will depend on the url
+  queue_url(voice_channel, text_channel, url, title)
+  {
+    // by default: simply forward the url to discord
+    let fn = () => { return url };
+    let prov = this.provider(url);
+    if (prov == 'youtube')
+    {
+      fn = _ytdl.bind(this, url, {filter: 'audioonly'});
+    }
+    else if (prov == 'soundcloud')
+    {
+      fn = _sndl.bind(this, url, ['-x']);
+    }
+
+    return this.genialo.voice.push(voice_channel, title, fn, () => {
+      text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
+    });
   }
 
   async handle_play(str, message)
@@ -119,10 +137,8 @@ class player extends require('../handler').handler
       return;
     }
 
-    let len = this.genialo.voice.push(voice_channel, r.results[0].title, this.song_fetcher(r.results[0].url),
-                () => {
-                  message.channel.send(`:musical_note: Now playing **${r.results[0].title}** :musical_note:\n${r.results[0].url}`);
-                });
+    let len = this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title);
+
     if (len !== 0)
     {
       message.channel.send(`:clock: Your song **${r.results[0].title}** has been queued in position #${len} :clock:`);
@@ -198,10 +214,9 @@ class player extends require('../handler').handler
     // fetch chosen entry and clear current search
     let p = this.current_search.results[parseInt(args[0])-1];
     this.current_search = null;
-    let len = this.genialo.voice.push(voice_channel, p.title, this.song_fetcher(p.url),
-                () => {
-                  message.channel.send(`:musical_note: Now playing **${p.title}** :musical_note:\n${p.url}`);
-                });
+
+    let len = this.queue_url(voice_channel, message.channel, p.url, p.title);
+
     if (len !== 0)
     {
       message.channel.send(`:clock: Your song **${p.title}** has been queued in position #${len} :clock:`);
