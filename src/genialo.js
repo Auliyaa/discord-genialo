@@ -29,6 +29,7 @@ class genialo
     return new Promise(resolve => {
       this.client.on('ready', () =>
       {
+        console.log("client connected");
         resolve('ok');
       });
       this.client.login(this.config.get('general', 'discord_token'));
