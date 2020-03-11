@@ -5,6 +5,7 @@ const _genialo      = require('./genialo');
 const _player       = require('./player/player');
 const _gamedeals    = require('./gamedeals/gamedeals');
 const _pledges      = require('./eso/pledges');
+const _reactpic      = require('./reaction/reactpic');
 
 async function __main__()
 {
@@ -20,6 +21,7 @@ async function __main__()
   _player.register(bot);
   _gamedeals.register(bot);
   _pledges.register(bot);
+  _reactpic.register(bot);
 }
 
 __main__();
