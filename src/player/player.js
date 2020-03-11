@@ -89,7 +89,6 @@ class player extends require('../handler').handler
   /// actual way to fetch music data will depend on the url
   async queue_url(voice_channel, text_channel, url, title)
   {
-    console.log(`queuing voice_channel=${voice_channel}, text_channel=${text_channel}, url=${url}, title=${title}`);
     return new Promise(async resolve => {
       // by default: simply forward the url to discord
       let fn = () => { return url };
@@ -120,7 +119,6 @@ class player extends require('../handler').handler
         fn = _sndl.bind(this, url, ['-x']);
       }
 
-      console.log("queue resolved");
       let r = await this.genialo.voice.push(voice_channel, title, fn, () => {
         text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
       });
