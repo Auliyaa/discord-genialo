@@ -74,7 +74,7 @@ class gamedeals extends require('../handler').handler
       value = value.replace(/\&amp;/g,'');
       message_embed.addField(title,`${value} **[\[...\]](http://www.reddit.com/${post.link})**\n`,false);
     }
-    channel.send(messageEmbed);
+    channel.send(message_embed);
   }
 
   async fetch()
