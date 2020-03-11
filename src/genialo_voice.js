@@ -25,7 +25,11 @@ class genialo_voice
       {
         let samples = fs.readdirSync(this.genialo.config.get('genialo', 'join'));
         this.genialo.voice.play(`${this.genialo.config.get('genialo', 'join')}/${samples[Math.floor(Math.random()*samples.length)]}`,
-                                () => { resolve(); });
+        () => { resolve(); });
+      }
+      else
+      {
+        resolve();
       }
     });
   }
