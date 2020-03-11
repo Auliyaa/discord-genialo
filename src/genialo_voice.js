@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 /// handle a global audio queue for the genialo bot
 class genialo_voice
 {
@@ -17,7 +19,14 @@ class genialo_voice
       this.stop();
       this.channel    = target;
       this.connection = await this.channel.join();
-      this.genialo.voice.play('./samples/join.mp3', () => { resolve(); });
+
+      // if a join samples folder is provided, play a random sound from it when joining voice
+      if (this.genialo.config.get('genialo', 'join'))
+      {
+        let samples = fs.readdirSync(this.genialo.config.get('genialo', 'join'));
+        this.genialo.voice.play(`${this.genialo.config.get('genialo', 'join')}/${samples[Math.floor(Math.random()*samples.length)]}`,
+                                () => { resolve(); });
+      }
     });
   }
 
