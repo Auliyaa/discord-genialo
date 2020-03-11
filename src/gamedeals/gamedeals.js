@@ -51,7 +51,7 @@ class gamedeals extends require('../handler').handler
   {
     // fetch results & send messages
     let r = await this.fetch();
-    let messageEmbed = new discord.MessageEmbed()
+    let message_embed = new discord.MessageEmbed()
   	.setColor('#2ebf26')
   	.setTitle(`:moneybag: /r/gamedeals top ${r.length} deals of the day :moneybag:`)
   	.setURL('http://www.reddit.com/r/gamedeals')
@@ -60,11 +60,11 @@ class gamedeals extends require('../handler').handler
   	.setTimestamp()
   	.setFooter('I love money ... and video games', 'https://styles.redditmedia.com/t5_2qwx3/styles/communityIcon_n3y6x4zozxp01.png');
 
-    const picNumber = [':one:',':two:',':three:',':four:',':five:'];
+    const pic_number = [':one:',':two:',':three:',':four:',':five:'];
     for (let ii=0; ii < r.length; ++ii)
     {
       let post = r[ii];
-      let title = `${picNumber[ii]} **with +${post.score} upvotes**`;
+      let title = `${pic_number[ii]} **with +${post.score} upvotes**`;
 
       //make bold titles
       let value = post.title.replace(/(\[.*\])/,'**$1**');
@@ -72,7 +72,7 @@ class gamedeals extends require('../handler').handler
       value = value.replace(/\|/g,'\n');
       //remove html stuff
       value = value.replace(/\&amp;/g,'');
-      messageEmbed.addField(title,`${value} **[\[...\]](http://www.reddit.com/${post.link})**\n`,false);
+      message_embed.addField(title,`${value} **[\[...\]](http://www.reddit.com/${post.link})**\n`,false);
     }
     channel.send(messageEmbed);
   }
