@@ -9,18 +9,9 @@ const _pledges      = require('./eso/pledges');
 async function __main__()
 {
   // parse configuration
+  console.log(`.. reading configuration from ${process.argv[2]}`);
   const config = new _configparser();
-
-  if (process.argv.length >= 3)
-  {
-    console.log(`.. reading configuration from ${process.argv[2]}`);
-    config.read(process.argv[2]);
-  }
-  else
-  {
-    console.log(`.. reading configuration from /etc/genialo.conf`);
-    config.read("/etc/genialo.conf");
-  }
+  config.read(process.argv[2]);
 
   // create the client & connect to discord
   const bot = new _genialo.genialo(config);
