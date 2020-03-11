@@ -4,7 +4,7 @@ class gamedeals extends require('../handler').handler
 {
   get ID()
   {
-    return '!gamedeals';
+    return 'gamedeals';
   }
 
   constructor(genialo)
@@ -18,13 +18,13 @@ class gamedeals extends require('../handler').handler
     };
 
     // locate target channel if provided in the configuration
-    if (this.genialo.config.get('gamedeals', 'channel'))
+    if (this.get_config('channel'))
     {
       for (let guild of this.genialo.client.guilds.cache)
       {
         for (let channel of guild[1].channels.cache)
         {
-          if (channel[0] == this.genialo.config.get('gamedeals', 'channel'))
+          if (channel[0] == this.get_config('channel'))
           {
             this.channel = channel[1];
           }
@@ -33,11 +33,11 @@ class gamedeals extends require('../handler').handler
     }
 
     // start timer if an hour of day has been provide din the configuration
-    if (this.genialo.config.get('gamedeals', 'hour') && this.channel)
+    if (this.get_config('hour') && this.channel)
     {
       // post immediately and start timer
       this.interval = genialo.client.setInterval((async () => {
-        if (new Date().getHours() != parseInt(this.genialo.config.get('gamedeals', 'hour')))
+        if (new Date().getHours() != parseInt(this.get_config('hour')))
         {
           return;
         }

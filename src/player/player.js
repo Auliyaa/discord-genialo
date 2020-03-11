@@ -6,7 +6,7 @@ class player extends require('../handler').handler
 {
   get ID()
   {
-    return '!play';
+    return 'player';
   }
 
   constructor(genialo)

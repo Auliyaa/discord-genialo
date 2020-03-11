@@ -2,7 +2,7 @@ class pledges extends require('../handler').handler
 {
   get ID()
   {
-    return '!pledges';
+    return 'pledges';
   }
 
   constructor(genialo)
