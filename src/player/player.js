@@ -111,10 +111,9 @@ class player extends require('../handler').handler
       {
         _ytpl(url, ['id', 'name', 'url']).then(async results => {
           // recursively queue all elements from the playlist
-          let r = undefined;
           for (let result of results.data.playlist)
           {
-            r = this.queue_url(voice_channel, text_channel, result.url, result.name, {
+            this.queue_url(voice_channel, text_channel, result.url, result.name, {
               quiet         : true,
               no_join_sample: true
             });
