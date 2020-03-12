@@ -22,52 +22,50 @@ class player extends require('../handler').handler
     this.current_search = null;
   }
 
-  youtube_search(str)
+  youtube_search(str, resolve)
   {
-    return new Promise(resolve => {
-      // check if the requested string is a url
-      let re_url = /^http.+$/g;
-      if (re_url.test(str))
-      {
-        // url: queue requested song immediately
-        resolve({
-          error: undefined,
-          results: [
-            { url: str, title: str }
-          ]
-        });
-      }
-      else
-      {
-        // search string: search youtube and return first matches as defined by this.ytsc.opts
-        _ytsc(str, (err, results) => {
-          if (!results || results.length == 0)
-          {
-            err = `no match found for: ${str}`;
-          }
-          if (err)
-          {
-            resolve({
-              error  : err,
-              results: []
-            });
-          }
-          let r = [];
-          for (let result of results.videos)
-          {
-            r.push({
-              url  : result.url,
-              title: result.title,
-              dur  : result.timestamp
-            });
-          }
+    // check if the requested string is a url
+    let re_url = /^http.+$/g;
+    if (re_url.test(str))
+    {
+      // url: queue requested song immediately
+      resolve({
+        error: undefined,
+        results: [
+          { url: str, title: str }
+        ]
+      });
+    }
+    else
+    {
+      // search string: search youtube and return first matches as defined by this.ytsc.opts
+      _ytsc(str, (err, results) => {
+        if (!results || results.length == 0)
+        {
+          err = `no match found for: ${str}`;
+        }
+        if (err)
+        {
           resolve({
-            error  : undefined,
-            results: r
+            error  : err,
+            results: []
           });
+        }
+        let r = [];
+        for (let result of results.videos)
+        {
+          r.push({
+            url  : result.url,
+            title: result.title,
+            dur  : result.timestamp
+          });
+        }
+        resolve({
+          error  : undefined,
+          results: r
         });
-      }
-    });
+      });
+    }
   }
 
   /// return the provider of a given url: youtube, soundcloud
@@ -102,53 +100,48 @@ class player extends require('../handler').handler
       };
     }
 
-    return new Promise(async resolve => {
-      // by default: simply forward the url to discord
-      let fn = () => { return url };
-      let prov = this.provider(url);
-      if (prov == 'youtube')
+    // by default: simply forward the url to discord
+    let fn = () => { return url };
+    let prov = this.provider(url);
+    if (prov == 'youtube')
+    {
+      // check if the provided url is a playlist
+      try
       {
-        // check if the provided url is a playlist
-        try
-        {
-          _ytpl(url, ['id', 'name', 'url']).then(async results => {
-            // recursively queue all elements from the playlist
-            let r = undefined;
-            for (let result of results.data.playlist)
-            {
-              r = this.queue_url(voice_channel, text_channel, result.url, result.name, {
-                quiet  : true,
-                no_join: true
-              });
-            }
-            text_channel.send(`:clock: Queued ${results.data.playlist.length} songs from playlist :clock:`);
-            resolve();
-          });
+        _ytpl(url, ['id', 'name', 'url']).then(async results => {
+          // recursively queue all elements from the playlist
+          let r = undefined;
+          for (let result of results.data.playlist)
+          {
+            r = this.queue_url(voice_channel, text_channel, result.url, result.name, {
+              quiet  : true,
+              no_join: true
+            });
+          }
+          text_channel.send(`:clock: Queued ${results.data.playlist.length} songs from playlist :clock:`);
+        });
 
-          return;
-        }
-        catch(error)
-        {
-          // not a playlist: consider it as a plain youtube url
-          fn = _ytdl.bind(this, url, {filter: 'audioonly'});
-        }
+        return;
       }
-      else if (prov == 'soundcloud')
+      catch(error)
       {
-        fn = _sndl.bind(this, url, ['-x']);
+        // not a playlist: consider it as a plain youtube url
+        fn = _ytdl.bind(this, url, {filter: 'audioonly'});
       }
+    }
+    else if (prov == 'soundcloud')
+    {
+      fn = _sndl.bind(this, url, ['-x']);
+    }
 
-      let r = await this.genialo.voice.push(voice_channel, title, fn, () => {
-        text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
-      });
-
-      if (r !== 0 && !opts.quiet)
-      {
-        text_channel.send(`:clock: Your song **${title}** has been queued in position #${r} :clock:`);
-      }
-
-      resolve();
+    let r = this.genialo.voice.push(voice_channel, title, fn, () => {
+      text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
     });
+
+    if (r !== 0 && !opts.quiet)
+    {
+      text_channel.send(`:clock: Your song **${title}** has been queued in position #${r} :clock:`);
+    }
   }
 
   async handle_play(str, message)
@@ -167,23 +160,24 @@ class player extends require('../handler').handler
       return;
     }
 
-    let r = await this.youtube_search(str);
-    if (!r)
-    {
-      r = {error: "internal error"};
-    }
-    else if (!r.error && (!r.results || r.results.length == 0))
-    {
-      r.error = "no result";
-    }
+    this.youtube_search(str, r => {
+      if (!r)
+      {
+        r = {error: "internal error"};
+      }
+      else if (!r.error && (!r.results || r.results.length == 0))
+      {
+        r.error = "no result";
+      }
 
-    if (r.error)
-    {
-      message.channel.send(`:warning: YouTube search failed: ${r.error} :warning:`)
-      return;
-    }
+      if (r.error)
+      {
+        message.channel.send(`:warning: YouTube search failed: ${r.error} :warning:`)
+        return;
+      }
 
-    this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title, {});
+      this.queue_url(voice_channel, message.channel, r.results[0].url, r.results[0].title, {});
+    });
   }
 
   async handle_search(str, message)
@@ -204,28 +198,29 @@ class player extends require('../handler').handler
 
     // reset current search and run the new one
     this.current_search = null;
-    let r = await this.youtube_search(str);
-    if (r.error)
-    {
-      // failure
-      message.channel.send(`:warning: YouTube search failed: ${r.error} :warning:`)
-      return;
-    }
+    this.youtube_search(str, r => {
+      if (r.error)
+      {
+        // failure
+        message.channel.send(`:warning: YouTube search failed: ${r.error} :warning:`)
+        return;
+      }
 
-    // copy results and trim to the number of max results
-    this.current_search = r;
-    if (this.current_search.results.length > this.ytsc.max_results)
-    {
-      this.current_search.results.length = this.ytsc.max_results;
-    }
+      // copy results and trim to the number of max results
+      this.current_search = r;
+      if (this.current_search.results.length > this.ytsc.max_results)
+      {
+        this.current_search.results.length = this.ytsc.max_results;
+      }
 
-    let m = ':notes:Here are the results for your search::notes:\n';
-    for (let ii=0; ii < this.current_search.results.length; ++ii)
-    {
-      m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title} (${this.current_search.results[ii].dur})\n`
-    }
-    m += `Please type-in *!choose <1-${this.current_search.results.length}>*`
-    message.channel.send(m);
+      let m = ':notes:Here are the results for your search::notes:\n';
+      for (let ii=0; ii < this.current_search.results.length; ++ii)
+      {
+        m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title} (${this.current_search.results[ii].dur})\n`
+      }
+      m += `Please type-in *!choose <1-${this.current_search.results.length}>*`
+      message.channel.send(m);
+    });
   }
 
   async handle_choose(str, message)
