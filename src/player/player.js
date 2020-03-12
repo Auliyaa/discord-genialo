@@ -90,11 +90,11 @@ class player extends require('../handler').handler
   {
     if (this.genialo.voice.queue.length == 0 &&
         this.genialo.config.get('genialo', 'join') &&
-        !opts.no_join)
+        !opts.no_join_sample)
     {
       let samples = fs.readdirSync(this.genialo.config.get('genialo', 'join'));
       let p = `${this.genialo.config.get('genialo', 'join')}/${samples[Math.floor(Math.random()*samples.length)]}`;
-      await this.genialo.voice.push(voice_channel, title, () => { return p; }, () => {});
+      this.genialo.voice.push(voice_channel, 'join-sample', () => { return p; }, () => {});
       opts = {
         quiet: true
       };
@@ -114,8 +114,8 @@ class player extends require('../handler').handler
           for (let result of results.data.playlist)
           {
             r = this.queue_url(voice_channel, text_channel, result.url, result.name, {
-              quiet  : true,
-              no_join: true
+              quiet         : true,
+              no_join_sample: true
             });
           }
           text_channel.send(`:clock: Queued ${results.data.playlist.length} songs from playlist :clock:`);
