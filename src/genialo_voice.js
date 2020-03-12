@@ -67,10 +67,11 @@ class genialo_voice
   }
 
   /// queue an audio stream to be played in a specific target
-  push(target_channel, name, audio, on_start, on_finish)
+  push(target_channel, name, desc, audio, on_start, on_finish)
   {
     this.queue.push({
       name  : name,
+      desc  : desc,
       target: target_channel,
       audio : audio,
       callbacks: {

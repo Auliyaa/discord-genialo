@@ -1,8 +1,9 @@
-const _ytsc = require('yt-search');
-const _ytdl = require('ytdl-core');
-const _ytpl = require('youtube-playlist');
-const _sndl = require('youtube-dl');
-const fs    = require('fs');
+const discord = require('discord.js');
+const _ytsc   = require('yt-search');
+const _ytdl   = require('ytdl-core');
+const _ytpl   = require('youtube-playlist');
+const _sndl   = require('youtube-dl');
+const fs      = require('fs');
 
 class player extends require('../handler').handler
 {
@@ -94,7 +95,7 @@ class player extends require('../handler').handler
     {
       let samples = fs.readdirSync(this.genialo.config.get('genialo', 'join'));
       let p = `${this.genialo.config.get('genialo', 'join')}/${samples[Math.floor(Math.random()*samples.length)]}`;
-      this.genialo.voice.push(voice_channel, 'join-sample', () => { return p; }, () => {});
+      this.genialo.voice.push(voice_channel, 'join-sample', 'join-sample', () => { return p; }, () => {});
       opts = {
         quiet: true
       };
@@ -134,7 +135,7 @@ class player extends require('../handler').handler
       fn = _sndl.bind(this, url, ['-x']);
     }
 
-    let r = this.genialo.voice.push(voice_channel, title, fn, () => {
+    let r = this.genialo.voice.push(voice_channel, title, url, fn, () => {
       text_channel.send(`:musical_note: Now playing **${title}** :musical_note:\n${url}`);
     });
 
@@ -278,11 +279,15 @@ class player extends require('../handler').handler
         return;
       }
 
-      let m = `:musical_score: Here is the current music queue: :musical_score:\n\n`;
+      let m = new discord.MessageEmbed()
+      .setColor('#2ebf26')
+      .setTitle(`:musical_score: Current queue has ${this.genialo.voice.queue.length} entries :musical_score:`)
+      .setFooter('!skip: skip to the next song\n!stop: stops all playback\n!queue remove <n>: edit queue\n!queue clear: clear queue.');
+
       for (let ii=0; ii < this.genialo.voice.queue.length; ++ii)
       {
         let e = this.genialo.voice.queue[ii];
-        m += `:small_blue_diamond: #${ii+1}: ${e.name}\n`;
+        m.addField(`#${ii+1}: ${e.name}`, `- ${e.desc}`, false);
       }
 
       message.channel.send(m);
