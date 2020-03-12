@@ -88,7 +88,7 @@ class player extends require('../handler').handler
   /// actual way to fetch music data will depend on the url
   async queue_url(voice_channel, text_channel, url, title, opts)
   {
-    if (this.genialo.voice.queue.length == 0 &&
+    if (!this.genialo.voice.playing &&
         this.genialo.config.get('genialo', 'join') &&
         !opts.no_join_sample)
     {
