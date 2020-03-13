@@ -9,6 +9,7 @@ class genialo_voice
     this.dispatcher = null;
     this.volume_v   = 1;
     this.queue      = [];
+    this.current    = null;
   }
 
   async connect(target)
@@ -62,14 +63,15 @@ class genialo_voice
   /// true when an audio stream is currently being dispatched
   get playing()
   {
-    return this.dispatcher != null;
+    return this.current != null;
   }
 
   /// queue an audio stream to be played in a specific target
-  async push(target_channel, name, audio, on_start, on_finish)
+  push(target_channel, name, desc, audio, on_start, on_finish)
   {
     this.queue.push({
       name  : name,
+      desc  : desc,
       target: target_channel,
       audio : audio,
       callbacks: {
@@ -80,7 +82,8 @@ class genialo_voice
 
     if (!this.playing)
     {
-      await this.next();
+      this.next();
+      return 0;
     }
 
     return this.queue.length;
@@ -97,11 +100,11 @@ class genialo_voice
     }
 
     // fetch next entry in queue
-    let entry = this.queue.shift();
+    this.current = this.queue.shift();
 
-    if (this.channel != null && entry.target.id != this.channel.id)
+    if (this.channel != null && this.current.target.id != this.channel.id)
     {
-      // current voice channel is not the entry's target: disconnect from current voice channel
+      // current voice channel is not the current target: disconnect from current voice channel
       this.disconnect();
     }
 
@@ -111,21 +114,21 @@ class genialo_voice
     if (this.channel == null)
     {
       // connect to the target voice channel
-      await this.connect(entry.target);
+      await this.connect(this.current.target);
     }
 
     // trigger user callback
-    if (entry.callbacks.start)
+    if (this.current.callbacks.start)
     {
-      entry.callbacks.start();
+      this.current.callbacks.start();
     }
 
     // start playback
-    this.play(entry.audio(), () =>
+    this.play(this.current.audio(), () =>
     {
-      if (entry.callbacks.finish)
+      if (this.current.callbacks.finish)
       {
-        entry.callbacks.finish();
+        this.current.callbacks.finish();
       }
       this.next();
     });
