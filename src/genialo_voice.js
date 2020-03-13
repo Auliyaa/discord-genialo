@@ -14,7 +14,6 @@ class genialo_voice
 
   async connect(target)
   {
-    this.stop();
     this.channel    = target;
     this.connection = await this.channel.join();
   }
@@ -22,6 +21,7 @@ class genialo_voice
   disconnect()
   {
     this.stop();
+    
     if (this.connection != null)
     {
       this.connection.disconnect();
@@ -32,6 +32,8 @@ class genialo_voice
 
   stop()
   {
+    this.current = null;
+
     if (this.dispatcher != null)
     {
       this.dispatcher.destroy();
@@ -99,6 +101,9 @@ class genialo_voice
       return;
     }
 
+    // stop any previous playback
+    this.stop();
+
     // fetch next entry in queue
     this.current = this.queue.shift();
 
@@ -107,9 +112,6 @@ class genialo_voice
       // current voice channel is not the current target: disconnect from current voice channel
       this.disconnect();
     }
-
-    // stop any previous playback
-    this.stop();
 
     if (this.channel == null)
     {
