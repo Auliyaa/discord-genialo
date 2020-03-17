@@ -213,13 +213,14 @@ class player extends require('../handler').handler
         this.current_search.results.length = this.ytsc.max_results;
       }
 
-    let m = ':notes:Here are the results for your search::notes:\n';
-    for (let ii=0; ii < this.current_search.results.length; ++ii)
-    {
-      m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title} (${this.current_search.results[ii].dur})\n`
-    }
-    m += `Please type-in *${this.genialo.prefix}choose <1-${this.current_search.results.length}>*`
-    message.channel.send(m);
+      let m = ':notes:Here are the results for your search::notes:\n';
+      for (let ii=0; ii < this.current_search.results.length; ++ii)
+      {
+        m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title} (${this.current_search.results[ii].dur})\n`
+      }
+      m += `Please type-in *${this.genialo.prefix}choose <1-${this.current_search.results.length}>*`
+      message.channel.send(m);
+    });
   }
 
   async handle_choose(str, message)
