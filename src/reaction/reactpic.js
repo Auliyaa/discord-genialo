@@ -30,22 +30,23 @@ class reactpic extends require('../handler').handler
 
   send_image(channel, user, emotion)
   {
-    let message_embed = new discord.MessageEmbed()
-    .setColor('#6d1991')
-    .setTimestamp()
-
-    let pictures;
+    //reading directory
     fs.readdir(this.pictures_directory, (err,files) => {
       if(err) {
         console.log('error : ' + err);
       }
-      pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`), (err, fs) =>{
+      const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`), (err, fs) =>{
         console.log(fs);
       });
       if(pictures.length === 0) {
         console.log(`Failed to read a ${emotion} ${user} picture`)
-        message_embed.setTitle(`reactpic Error`)
+        //sending error message
+        let message_embed = new discord.MessageEmbed()
+        .setTitle(`reactpic Error`)
         .setDescription(`No ${emotion} ${user} have been found !`)
+        .setColor('#6d1991')
+        .setTimestamp();
+        channel.send(message_embed);
       }
       else {
         const picture_path = `${this.pictures_directory}/${pictures[0]}`;
@@ -71,20 +72,27 @@ class reactpic extends require('../handler').handler
               //get the first url
               const url = urls.values().next().value;
 
-              //send message
-              message_embed.setTitle(title)
+              //sending message
+              let message_embed = new discord.MessageEmbed()
+              .setTitle(title)
               .setImage(url)
-              .setFooter('What a great face', url);
+              .setFooter('What a great face', url)
+              .setColor('#6d1991')
+              .setTimestamp();
               channel.send(message_embed);
             }
           });
         }
         //file is a picture
         else {
-          message_embed.attachFiles(picture_path)
+          //sending message
+          let message_embed = new discord.MessageEmbed()
+          .attachFiles(picture_path)
           .setTitle(`Here's your ${emotion} ${user}`)
           .setImage(`attachment://${pictures[0]}`)
-          .setFooter('What a great face', `attachment://${pictures[0]}`);
+          .setFooter('What a great face', `attachment://${pictures[0]}`)
+          .setColor('#6d1991')
+          .setTimestamp();
           channel.send(message_embed);
         }
       }
@@ -108,13 +116,14 @@ class reactpic extends require('../handler').handler
   send_list(channel, pattern = '')
   {
     fs.readdir(this.pictures_directory, { withFileTypes: true }, (err,elements) => {
-      const additionnal_title = (pattern === '') ? '' : ` with keyword **'${pattern}'**`;
+      const additional_title = (pattern === '') ? '' : ` with keyword **'${pattern}'**`;
       let message_embed = new discord.MessageEmbed()
-      .setTitle(`Pictures associated${additionnal_title}`)
+      .setTitle(`Pictures associated${additional_title}`)
       .setColor('#6d1991')
       .setTimestamp();
       let files = elements.filter(file => (file.isFile() && file.name.includes(`${pattern}`)));
       files.forEach(file => {
+        //file.name includes extension
         const name = path.parse(file.name).name;
         const splitted = name.split('_');
         const user = splitted[0];
