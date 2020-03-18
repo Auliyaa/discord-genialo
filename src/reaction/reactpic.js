@@ -18,56 +18,62 @@ class reactpic extends require('../handler').handler
     this.opts = {
       max_posts: 5
     };
-    this.pictures_directory = '.';
+    this.pictures_directory = this.get_config('pictures-directory') ? this.get_config('pictures-directory') : '.';
     this.color = '#7b42f5';
-    if(this.get_config('pictures-directory')) {
-     this.pictures_directory = this.get_config('pictures-directory');
-    }
   }
 
+  // look-up if a file exists for the given user / emotion
   send_image(channel, user, emotion)
   {
     //reading directory
     fs.readdir(this.pictures_directory, (err,files) => {
-      if(err) {
-        console.log(`[${this.ID()}] error : ${err}`);
+      if(err)
+      {
+        console.error(`[${this.ID}] error: ${err}`);
       }
+
       const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`));
-      if(pictures.length === 0) {
+
+      if(pictures.length === 0)
+      {
         //sending error message
         let message_embed = new discord.MessageEmbed()
-        .setTitle(`No ${emotion} ${user} have been found !`)
+        .setTitle(`No picture found for ${emotion} / ${user} !`)
         .setColor(this.color)
         .setTimestamp();
         channel.send(message_embed);
       }
-      else {
+      else
+      {
         const picture_path = `${this.pictures_directory}/${pictures[0]}`;
         const extension = path.extname(picture_path);
-        //the file is html or text
-        if(extension === '.html' || extension === '.txt') {
+        if(extension === '.html' || extension === '.txt')
+        {
+          // requested element is not a picture: parse it and forward embbeded urls
           fs.readFile(picture_path, 'utf8', (err, contents) => {
-            if(err) {
-              console.log(`[${this.ID()}] error : ${err}`);
+            if(err)
+            {
+              console.error(`[${this.ID()}] error : ${err}`);
             }
-            //detecting urls from file
-            var urls = getUrls(contents);
-            if(urls.size != 0) {
 
-              //get the rest of the string for title
+            var urls = getUrls(contents);
+
+            if (urls.size != 0)
+            {
+              // get the rest of the string for title
               let title = contents;
               urls.forEach(url => {
                 title = title.replace(url, '');
                 title = title.replace('\n', '');
               });
-              if(title === '') {
+              if(title === '')
+              {
                 title = `Here's your ${emotion} ${user}`;
               }
 
-              //get the first url
+              // get the first url & send message
               const url = urls.values().next().value;
 
-              //sending message
               let message_embed = new discord.MessageEmbed()
               .setTitle(title)
               .setImage(url)
@@ -78,9 +84,9 @@ class reactpic extends require('../handler').handler
             }
           });
         }
-        //file is a picture
+        // resource is a picture
         else {
-          //sending message
+          // sending message
           let message_embed = new discord.MessageEmbed()
           .attachFiles(picture_path)
           .setTitle(`Here's your ${emotion} ${user}`)
@@ -116,7 +122,7 @@ class reactpic extends require('../handler').handler
 
       //preparing message to send
       let message_embed = new discord.MessageEmbed()
-      .setTitle(`Pictures associated${additional_title}`)
+      .setTitle(`Pictures {additional_title}`)
       .setColor(this.color)
       .setTimestamp();
 
@@ -140,29 +146,39 @@ class reactpic extends require('../handler').handler
   handle_reactpic(args, message)
   {
     const tokens = args.split(' ');
-    if(tokens[0] === '') {
+    if(tokens[0].length === 0)
+    {
       this.send_usage(message.channel);
     }
-    else {
-      //list images
-      if(tokens[0] === 'list') {
-          //list all images
-          if(tokens.length === 1) {
+    else
+    {
+      // list images
+      if(tokens[0] === 'list')
+      {
+          // list all images
+          if(tokens.length === 1)
+          {
             this.send_list(message.channel)
           }
-          //list images with associated with a keyword
-          else {
+          // list images with associated with a keyword
+          else
+          {
             this.send_list(message.channel, tokens[1]);
           }
       }
       //send image
-      else {
+      else
+      {
         const user = tokens[0];
         const emotion = tokens[1];
-        if(user && emotion) {
+        if(user && emotion)
+        {
           this.send_image(message.channel, user, emotion);
         }
-        else this.send_usage(message.channel);
+        else
+        {
+          this.send_usage(message.channel);
+        }
       }
     }
   }
