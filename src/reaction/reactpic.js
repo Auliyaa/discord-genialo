@@ -22,6 +22,16 @@ class reactpic extends require('../handler').handler
     this.color = '#7b42f5';
   }
 
+  //send an error message for the giver user / emotion
+  send_not_found_image(channel, user, emotion)
+  {
+    let message_embed = new discord.MessageEmbed()
+    .setTitle(`No picture found for ${emotion} / ${user} !`)
+    .setColor(this.color)
+    .setTimestamp();
+    channel.send(message_embed);
+  }
+
   // look-up if a file exists for the given user / emotion
   send_image(channel, user, emotion)
   {
@@ -31,70 +41,79 @@ class reactpic extends require('../handler').handler
       {
         console.error(`[${this.ID}] error: ${err}`);
       }
-
-      const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`));
-
-      if(pictures.length === 0)
-      {
-        //sending error message
-        let message_embed = new discord.MessageEmbed()
-        .setTitle(`No picture found for ${emotion} / ${user} !`)
-        .setColor(this.color)
-        .setTimestamp();
-        channel.send(message_embed);
-      }
       else
       {
-        const picture_path = `${this.pictures_directory}/${pictures[0]}`;
-        const extension = path.extname(picture_path);
-        if(extension === '.html' || extension === '.txt')
+        const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`));
+
+        if(pictures.length === 0)
         {
-          // requested element is not a picture: parse it and forward embbeded urls
-          fs.readFile(picture_path, 'utf8', (err, contents) => {
-            if(err)
-            {
-              console.error(`[${this.ID()}] error : ${err}`);
-            }
-
-            var urls = getUrls(contents);
-
-            if (urls.size != 0)
-            {
-              // get the rest of the string for title
-              let title = contents;
-              urls.forEach(url => {
-                title = title.replace(url, '');
-                title = title.replace('\n', '');
-              });
-              if(title === '')
-              {
-                title = `Here's your ${emotion} ${user}`;
-              }
-
-              // get the first url & send message
-              const url = urls.values().next().value;
-
-              let message_embed = new discord.MessageEmbed()
-              .setTitle(title)
-              .setImage(url)
-              .setFooter('What a great face', url)
-              .setColor(this.color)
-              .setTimestamp();
-              channel.send(message_embed);
-            }
-          });
+          //sending error message
+          send_not_found_image(channel, user, emotion);
         }
-        // resource is a picture
-        else {
-          // sending message
-          let message_embed = new discord.MessageEmbed()
-          .attachFiles(picture_path)
-          .setTitle(`Here's your ${emotion} ${user}`)
-          .setImage(`attachment://${pictures[0]}`)
-          .setFooter('What a great face', `attachment://${pictures[0]}`)
-          .setColor(this.color)
-          .setTimestamp();
-          channel.send(message_embed);
+        else
+        {
+          const picture_path = `${this.pictures_directory}/${pictures[0]}`;
+          const extension = path.extname(picture_path);
+          if(extension === '.html' || extension === '.txt')
+          {
+            // requested element is not a picture: parse it and forward embbeded urls
+            fs.readFile(picture_path, 'utf8', (err, contents) => {
+              if(err)
+              {
+                console.error(`[${this.ID()}] error: ${err}`);
+
+                //sending error message
+                send_not_found_image(channel, user, emotion);
+              }
+              else
+              {
+                var urls = getUrls(contents);
+
+                if (urls.size != 0)
+                {
+                  // get the rest of the string for title
+                  let title = contents;
+                  urls.forEach(url => {
+                    title = title.replace(url, '');
+                    title = title.replace('\n', '');
+                  });
+                  if(title === '')
+                  {
+                    title = `Here's your ${emotion} ${user}`;
+                  }
+
+                  // get the first url & send message
+                  const url = urls.values().next().value;
+
+                  let message_embed = new discord.MessageEmbed()
+                  .setTitle(title)
+                  .setImage(url)
+                  .setFooter('What a great face', url)
+                  .setColor(this.color)
+                  .setTimestamp();
+                  channel.send(message_embed);
+                }
+                else
+                {
+                  //sending error message
+                  send_not_found_image(channel, user, emotion);
+                }
+              }
+            });
+          }
+          // resource is a picture
+          else
+          {
+            // sending message
+            let message_embed = new discord.MessageEmbed()
+            .attachFiles(picture_path)
+            .setTitle(`Here's your ${emotion} ${user}`)
+            .setImage(`attachment://${pictures[0]}`)
+            .setFooter('What a great face', `attachment://${pictures[0]}`)
+            .setColor(this.color)
+            .setTimestamp();
+            channel.send(message_embed);
+          }
         }
       }
     });
@@ -126,18 +145,25 @@ class reactpic extends require('../handler').handler
       .setColor(this.color)
       .setTimestamp();
 
-      //filtering elements if is a file if his name contains the search pattern
-      let files = elements.filter(file => (file.isFile() && file.name.includes(`${pattern}`)));
+      if(err)
+      {
+        console.error(`[${this.ID}] error: ${err}`);
+      }
+      else
+      {
+        //filtering elements if is a file if his name contains the search pattern
+        let files = elements.filter(file => (file.isFile() && file.name.includes(`${pattern}`)));
 
-      files.forEach(file => {
-        //file.name includes extension, so we get rid of it
-        const name = path.parse(file.name).name;
-        const tokens = name.split('_');
-        const user = tokens[0];
-        const emotion = tokens[1];
-        message_embed.addField(`**${user} ${emotion}**`,`*${this.genialo.prefix}reactpic ${user} ${emotion}*`,true);
-      });
-
+        files.forEach(file =>
+        {
+          //file.name includes extension, so we get rid of it
+          const name = path.parse(file.name).name;
+          const tokens = name.split('_');
+          const user = tokens[0];
+          const emotion = tokens[1];
+          message_embed.addField(`**${user} ${emotion}**`,`*${this.genialo.prefix}reactpic ${user} ${emotion}*`,true);
+        });
+      }
       //sending message
       channel.send(message_embed);
     });
