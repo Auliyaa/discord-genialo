@@ -48,7 +48,7 @@ class reactpic extends require('../handler').handler
         if(pictures.length === 0)
         {
           //sending error message
-          send_not_found_image(channel, user, emotion);
+          this.send_not_found_image(channel, user, emotion);
         }
         else
         {
@@ -63,7 +63,7 @@ class reactpic extends require('../handler').handler
                 console.error(`[${this.ID()}] error: ${err}`);
 
                 //sending error message
-                send_not_found_image(channel, user, emotion);
+                this.send_not_found_image(channel, user, emotion);
               }
               else
               {
@@ -96,7 +96,7 @@ class reactpic extends require('../handler').handler
                 else
                 {
                   //sending error message
-                  send_not_found_image(channel, user, emotion);
+                  this.send_not_found_image(channel, user, emotion);
                 }
               }
             });
