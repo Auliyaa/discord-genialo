@@ -122,7 +122,7 @@ class reactpic extends require('../handler').handler
 
       //preparing message to send
       let message_embed = new discord.MessageEmbed()
-      .setTitle(`Pictures {additional_title}`)
+      .setTitle(`Pictures ${additional_title}`)
       .setColor(this.color)
       .setTimestamp();
 
