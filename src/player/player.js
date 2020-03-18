@@ -149,7 +149,7 @@ class player extends require('../handler').handler
     // check arguments
     if (str.length == 0)
     {
-      message.channel.send(`:no_entry: Please type !play **search string or url** :no_entry:`);
+      message.channel.send(`:no_entry: Please type ${this.genialo.prefix}play **search string or url** :no_entry:`);
       return;
     }
     // check if the user is in a voice channel
@@ -185,7 +185,7 @@ class player extends require('../handler').handler
     // check arguments
     if (str.length == 0)
     {
-      message.channel.send(`:no_entry: Please type !play **search string or url** :no_entry:`);
+      message.channel.send(`:no_entry: Please type ${this.genialo.prefix}play **search string or url** :no_entry:`);
       return;
     }
     // check if the user is in a voice channel
@@ -218,7 +218,7 @@ class player extends require('../handler').handler
       {
         m += `:small_blue_diamond: #${ii+1}: ${this.current_search.results[ii].title} (${this.current_search.results[ii].dur})\n`
       }
-      m += `Please type-in *!choose <1-${this.current_search.results.length}>*`
+      m += `Please type-in *${this.genialo.prefix}choose <1-${this.current_search.results.length}>*`
       message.channel.send(m);
     });
   }
@@ -227,14 +227,14 @@ class player extends require('../handler').handler
   {
     if (this.current_search == null)
     {
-      message.channel.send(':no_entry: Please type-in *!search <search string>* first :no_entry:');
+      message.channel.send(`:no_entry: Please type-in *${this.genialo.prefix}search <search string>* first :no_entry:`);
       return;
     }
 
     let args = str.split(' ');
     if (args.length == 0 || isNaN(parseInt(args[0])) || parseInt(args[0]) <= 0 || parseInt(args[0]) > this.current_search.results.length)
     {
-      message.channel.send(`:no_entry: Please type-in *!choose <1-${this.current_search.results.length}>* to choose a music to play :no_entry:`);
+      message.channel.send(`:no_entry: Please type-in *${this.genialo.prefix}choose <1-${this.current_search.results.length}>* to choose a music to play :no_entry:`);
       return;
     }
 
@@ -313,9 +313,9 @@ class player extends require('../handler').handler
     else
     {
       let m = 'Usage:\n';
-      m += '*!queue*: Shows the current music queue.\n';
-      m += `*!queue remove [1-${this.genialo.voice.queue.length != 0 ? this.genialo.voice.queue.length : 'X'}]*: Removes a specific entry in the music queue.\n`;
-      m += `*!queue clear*: Removes all queued entries.\n`;
+      m += `*${this.genialo.prefix}queue*: Shows the current music queue.\n`;
+      m += `*${this.genialo.prefix}queue remove [1-${this.genialo.voice.queue.length != 0 ? this.genialo.voice.queue.length : 'X'}]*: Removes a specific entry in the music queue.\n`;
+      m += `*${this.genialo.prefix}queue clear*: Removes all queued entries.\n`;
       message.channel.send(m);
     }
   }
