@@ -19,13 +19,10 @@ class reactpic extends require('../handler').handler
       max_posts: 5
     };
     this.pictures_directory = '.';
+    this.color = '#7b42f5';
     if(this.get_config('pictures-directory')) {
      this.pictures_directory = this.get_config('pictures-directory');
     }
-  }
-
-  checkFile(file, user, emotion) {
-    return (file.isFile() && file.startsWith(`${user}_${emotion}.`));
   }
 
   send_image(channel, user, emotion)
@@ -33,18 +30,14 @@ class reactpic extends require('../handler').handler
     //reading directory
     fs.readdir(this.pictures_directory, (err,files) => {
       if(err) {
-        console.log('error : ' + err);
+        console.log(`[${this.ID()}] error : ${err}`);
       }
-      const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`), (err, fs) =>{
-        console.log(fs);
-      });
+      const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`));
       if(pictures.length === 0) {
-        console.log(`Failed to read a ${emotion} ${user} picture`)
         //sending error message
         let message_embed = new discord.MessageEmbed()
-        .setTitle(`reactpic Error`)
-        .setDescription(`No ${emotion} ${user} have been found !`)
-        .setColor('#6d1991')
+        .setTitle(`No ${emotion} ${user} have been found !`)
+        .setColor(this.color)
         .setTimestamp();
         channel.send(message_embed);
       }
@@ -54,9 +47,11 @@ class reactpic extends require('../handler').handler
         //the file is html or text
         if(extension === '.html' || extension === '.txt') {
           fs.readFile(picture_path, 'utf8', (err, contents) => {
+            if(err) {
+              console.log(`[${this.ID()}] error : ${err}`);
+            }
             //detecting urls from file
             var urls = getUrls(contents);
-            console.log(urls);
             if(urls.size != 0) {
 
               //get the rest of the string for title
@@ -77,7 +72,7 @@ class reactpic extends require('../handler').handler
               .setTitle(title)
               .setImage(url)
               .setFooter('What a great face', url)
-              .setColor('#6d1991')
+              .setColor(this.color)
               .setTimestamp();
               channel.send(message_embed);
             }
@@ -91,7 +86,7 @@ class reactpic extends require('../handler').handler
           .setTitle(`Here's your ${emotion} ${user}`)
           .setImage(`attachment://${pictures[0]}`)
           .setFooter('What a great face', `attachment://${pictures[0]}`)
-          .setColor('#6d1991')
+          .setColor(this.color)
           .setTimestamp();
           channel.send(message_embed);
         }
@@ -107,7 +102,7 @@ class reactpic extends require('../handler').handler
 
     let message_embed = new discord.MessageEmbed()
     .setTitle(`reactpic Usage`)
-    .setColor('#6d1991')
+    .setColor(this.color)
     .setDescription(usage)
     .setTimestamp();
     channel.send(message_embed);
@@ -116,46 +111,54 @@ class reactpic extends require('../handler').handler
   send_list(channel, pattern = '')
   {
     fs.readdir(this.pictures_directory, { withFileTypes: true }, (err,elements) => {
+      //add additional title if the user has given a search pattern
       const additional_title = (pattern === '') ? '' : ` with keyword **'${pattern}'**`;
+
+      //preparing message to send
       let message_embed = new discord.MessageEmbed()
       .setTitle(`Pictures associated${additional_title}`)
-      .setColor('#6d1991')
+      .setColor(this.color)
       .setTimestamp();
+
+      //filtering elements if is a file if his name contains the search pattern
       let files = elements.filter(file => (file.isFile() && file.name.includes(`${pattern}`)));
+
       files.forEach(file => {
-        //file.name includes extension
+        //file.name includes extension, so we get rid of it
         const name = path.parse(file.name).name;
-        const splitted = name.split('_');
-        const user = splitted[0];
-        const emotion = splitted[1];
+        const tokens = name.split('_');
+        const user = tokens[0];
+        const emotion = tokens[1];
         message_embed.addField(`**${user} ${emotion}**`,`*${this.genialo.prefix}reactpic ${user} ${emotion}*`,true);
       });
+
+      //sending message
       channel.send(message_embed);
     });
   }
 
   handle_reactpic(args, message)
   {
-    const splitted = args.split(' ');
-    if(splitted[0] === '') {
+    const tokens = args.split(' ');
+    if(tokens[0] === '') {
       this.send_usage(message.channel);
     }
     else {
       //list images
-      if(splitted[0] === 'list') {
+      if(tokens[0] === 'list') {
           //list all images
-          if(splitted.length === 1) {
+          if(tokens.length === 1) {
             this.send_list(message.channel)
           }
           //list images with associated with a keyword
           else {
-            this.send_list(message.channel, splitted[1]);
+            this.send_list(message.channel, tokens[1]);
           }
       }
       //send image
       else {
-        const user = splitted[0];
-        const emotion = splitted[1];
+        const user = tokens[0];
+        const emotion = tokens[1];
         if(user && emotion) {
           this.send_image(message.channel, user, emotion);
         }
