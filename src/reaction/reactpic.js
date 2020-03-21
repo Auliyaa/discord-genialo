@@ -35,8 +35,9 @@ class reactpic extends require('../handler').handler
   send_usage(channel)
   {
     let usage = `*${this.genialo.prefix}reactpic list* : List all images.\n`;
-    usage += `*${this.genialo.prefix}reactpic list [pattern]* : List all images associated with a keyword.\n`;
+    usage += `*${this.genialo.prefix}reactpic list [pattern]* : List all images associated with an optional pattern.\n`;
     usage += `*${this.genialo.prefix}reactpic [user] [emotion]* : Show reaction picture, using a user name associated with an emotion.\n`;
+    usage += `*${this.genialo.prefix}reactpic random [pattern]* : Show a random reaction with an optional pattern.\n`;
 
     let message_embed = new discord.MessageEmbed()
     .setTitle(`reactpic Usage`)
