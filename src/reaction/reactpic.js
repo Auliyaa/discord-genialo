@@ -31,7 +31,7 @@ class reactpic extends require('../handler').handler
     .setTimestamp();
     channel.send(message_embed);
   }
-
+  //send usage
   send_usage(channel)
   {
     let usage = `*${this.genialo.prefix}reactpic list* : List all images.\n`;
@@ -47,7 +47,7 @@ class reactpic extends require('../handler').handler
     channel.send(message_embed);
   }
 
-  // look-up if a file exists for the given user / emotion
+  //send given image
   send_image(channel, picture)
   {
     const picture_path = `${this.pictures_directory}/${picture}`;
@@ -121,55 +121,57 @@ class reactpic extends require('../handler').handler
     }
   }
 
-  // send a random image with an optional pattern
-  send_random_image(channel, pattern = '')
+  // send an image with a pattern, or random, or random with pattern
+  search_and_send_image(channel, random, pattern = '')
   {
-    //reading directory
-    fs.readdir(this.pictures_directory, { withFileTypes: true }, (err,files) => {
-      if(err)
-      {
-        console.error(`[${this.ID}] error: ${err}`);
-        this.send_error_message(channel, `No picture found !`)
-      }
-      else
-      {
-        //filtering elements if is a file if his name contains the search pattern
-        const pictures = files.filter(file => (file.isFile() && file.name.includes(`${pattern}`)));
-        if(pictures.length === 0)
+    //make sure that we have a valid pattern if we're not in random mode ("user_emotion.")
+    if(!random && !(/^[a-zA-Z0-9]+_[a-zA-Z0-9]+\.$/.test(pattern)))
+    {
+      this.send_usage(channel);
+    }
+    else
+    {
+      //reading directory
+      fs.readdir(this.pictures_directory, { withFileTypes: true }, (err,files) => {
+        if(err)
         {
-          //send error message
-          this.send_error_message(channel, `No picture found with pattern ${pattern} !`);
+          console.error(`[${this.ID}] error: ${err}`);
+          this.send_error_message(channel, `No picture found !`)
         }
-        else {
-          //chose a file randomly and send it
-          const picture_index = Math.floor(Math.random() * Math.floor(pictures.length));
-          this.send_image(channel, pictures[picture_index].name);
+        else
+        {
+          //filtering elements if is a file if his name contains the search pattern
+          const pictures = files.filter(file => (file.isFile() && file.name.includes(`${pattern}`)));
+          if(pictures.length === 0)
+          {
+            //send error message
+            let value = pattern;
+            if(!random)
+            {
+              value = value.replace('.', '');
+              const tokens = value.split('_');
+              const user = tokens[0];
+              const emotion = tokens[1];
+              value = `${emotion} / ${user}`;
+            }
+            this.send_error_message(channel, `No picture found for ${value} !`);
+          }
+          else
+          {
+            if(random)
+            {
+              //chose a file randomly and send it
+              const picture_index = Math.floor(Math.random() * Math.floor(pictures.length));
+              this.send_image(channel, pictures[picture_index].name);
+            }
+            else
+            {
+              this.send_image(channel, pictures[0].name);
+            }
+          }
         }
-      }
-    });
-  }
-
-  search_and_send_image(channel, user, emotion)
-  {
-    //reading directory
-    fs.readdir(this.pictures_directory, (err,files) => {
-      if(err)
-      {
-        console.error(`[${this.ID}] error: ${err}`);
-      }
-
-      const pictures = files.filter(file => file.startsWith(`${user}_${emotion}.`));
-
-      if(pictures.length === 0)
-      {
-        //sending error message
-        this.send_error_image(channel, `No picture found for ${emotion} / ${user} !`);
-      }
-      else
-      {
-        this.send_image(channel, pictures[0]);
-      }
-    });
+      });
+    }
   }
 
   send_list(channel, pattern = '')
@@ -234,15 +236,15 @@ class reactpic extends require('../handler').handler
       // random mode with an optional pattern
       else if(tokens[0] === 'random')
       {
-        // list all images
+        //send a random image
         if(tokens.length === 1)
         {
-          this.send_random_image(message.channel)
+          this.search_and_send_image(message.channel, true)
         }
-        // list images with associated with a keyword
+        //send a random image filtered by a given pattern
         else
         {
-          this.send_random_image(message.channel, tokens[1]);
+          this.search_and_send_image(message.channel, true, tokens[1]);
         }
       }
       //send image
@@ -252,7 +254,8 @@ class reactpic extends require('../handler').handler
         const emotion = tokens[1];
         if(user && emotion)
         {
-          this.search_and_send_image(message.channel, user, emotion);
+          //send a specific image
+          this.search_and_send_image(message.channel, false, `${user}_${emotion}.`);
         }
         else
         {
