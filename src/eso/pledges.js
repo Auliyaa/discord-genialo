@@ -50,6 +50,7 @@ class pledges extends require('../handler').handler
       {
         name    : 'Urgarlag Chief-bane',
         rotation: [
+          'Imperial City Prison',
           'Ruins of Mazzatun',
           'White-Gold Tower',
           'Cradle of Shadows',
@@ -63,8 +64,7 @@ class pledges extends require('../handler').handler
           'Frostvault',
           'Moongrave Fane',
           'Lair of Maarselok',
-          ['Icereach', 'Unhallowed Grave'],
-          'Imperial City Prison'
+          ['Icereach', 'Unhallowed Grave']
         ]
       },
     ];
