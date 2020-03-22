@@ -5,7 +5,7 @@ const _genialo      = require('./genialo');
 const _player       = require('./player/player');
 const _gamedeals    = require('./gamedeals/gamedeals');
 const _pledges      = require('./eso/pledges');
-const _react        = require('./reaction/react');
+const _react        = require('./react/react');
 
 async function __main__()
 {
