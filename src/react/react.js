@@ -191,7 +191,7 @@ class react extends require('../handler').handler
               element_display = `${tokens[0]} / ${tokens[1]}`;
             }
             //send error message
-            this.send_error_message(message.channel, `No element found for ${value} !`);
+            this.send_error_message(message.channel, `No element found for ${element_displays} !`);
           }
           else
           {
