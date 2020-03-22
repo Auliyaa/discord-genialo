@@ -15,6 +15,12 @@ class handler
   ///  call it when available.
   on_message(message)
   {
+    // ignore bot's messages
+    if (message.author.id == this.genialo.client.user.id)
+    {
+      return;
+    }
+
     // message is handled it it fits the following pattern:
     // <!command> <args>
     // where supported commands are documented in this class
