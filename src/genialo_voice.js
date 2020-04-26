@@ -16,12 +16,13 @@ class genialo_voice
   {
     this.channel    = target;
     this.connection = await this.channel.join();
+    this.connection.on('error', console.error);
   }
 
   disconnect()
   {
     this.stop();
-    
+
     if (this.connection != null)
     {
       this.connection.disconnect();
@@ -46,6 +47,7 @@ class genialo_voice
     // forward to dispatcher
     this.dispatcher = this.connection.play(audio, { volume: this.volume });
     this.dispatcher.on('finish', on_finish);
+    this.dispatcher.on('error', console.error);
   }
 
   /// change volume for all voice actions
