@@ -257,7 +257,7 @@ class react extends require('../handler').handler
             type = '[SOUND]';
           }
           //add field
-          message_embed.addField(`**${type} ${user} ${emotion}**`,`*${this.genialo.prefix}reactpic ${user} ${emotion}*`,true);
+          message_embed.addField(`**${type} ${user} ${emotion}**`,`*${this.genialo.prefix}react ${user} ${emotion}*`,true);
         });
       }
       //sending message
